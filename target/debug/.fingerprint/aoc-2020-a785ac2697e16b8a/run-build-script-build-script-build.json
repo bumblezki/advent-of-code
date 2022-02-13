@@ -1,0 +1,1 @@
+{"rustc":10961766323516725219,"features":"","target":0,"profile":0,"path":0,"deps":[[12621635029537052806,"build_script_build",false,13591027295875087496]],"local":[{"RerunIfChanged":{"output":"debug/build/aoc-2020-a785ac2697e16b8a/output","paths":["build.rs"]}}],"rustflags":[],"metadata":0,"config":0,"compile_kind":0}

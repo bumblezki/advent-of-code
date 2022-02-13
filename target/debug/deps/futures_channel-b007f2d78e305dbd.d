@@ -1,0 +1,11 @@
+/Users/alex/Documents/Programming/Rust/advent-of-code/target/debug/deps/futures_channel-b007f2d78e305dbd.rmeta: /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/futures-channel-0.3.8/src/lib.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/futures-channel-0.3.8/src/lock.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/futures-channel-0.3.8/src/mpsc/mod.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/futures-channel-0.3.8/src/mpsc/queue.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/futures-channel-0.3.8/src/oneshot.rs
+
+/Users/alex/Documents/Programming/Rust/advent-of-code/target/debug/deps/libfutures_channel-b007f2d78e305dbd.rlib: /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/futures-channel-0.3.8/src/lib.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/futures-channel-0.3.8/src/lock.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/futures-channel-0.3.8/src/mpsc/mod.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/futures-channel-0.3.8/src/mpsc/queue.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/futures-channel-0.3.8/src/oneshot.rs
+
+/Users/alex/Documents/Programming/Rust/advent-of-code/target/debug/deps/futures_channel-b007f2d78e305dbd.d: /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/futures-channel-0.3.8/src/lib.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/futures-channel-0.3.8/src/lock.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/futures-channel-0.3.8/src/mpsc/mod.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/futures-channel-0.3.8/src/mpsc/queue.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/futures-channel-0.3.8/src/oneshot.rs
+
+/Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/futures-channel-0.3.8/src/lib.rs:
+/Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/futures-channel-0.3.8/src/lock.rs:
+/Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/futures-channel-0.3.8/src/mpsc/mod.rs:
+/Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/futures-channel-0.3.8/src/mpsc/queue.rs:
+/Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/futures-channel-0.3.8/src/oneshot.rs:
