@@ -1,9 +1,23 @@
 // Potential improvements:
 //
-
-pub fn day01(_input_lines: &[Vec<String>]) -> (String, String) {
-    let answer1 = 0;
-    let answer2 = 0;
+pub fn day01(input_lines: &[Vec<String>]) -> (String, String) {
+    let answer1 = input_lines[0]
+                        .iter()
+                        .fold(0, |accumulator, line| accumulator + line.parse::<i32>().unwrap());
+    let mut frequencies = vec![0];
+    let mut accumulator = 0;
+    'outer: loop {
+        for line in &input_lines[0] {
+            accumulator += line.parse::<i32>().unwrap();
+            
+            if frequencies.contains(&accumulator) {
+                break 'outer
+            }
+            frequencies.push(accumulator);
+        }
+    }
+    let answer2 = accumulator;
+    
     (format!("{}", answer1), format!("{}", answer2))
 }
 
@@ -15,9 +29,9 @@ mod tests {
     #[test]
     fn check_day01_case01() {
         full_test(
-"", // INPUT STRING
+"+1\n-2\n+3\n+1\n+1\n-2\n-2", // INPUT STRING
 "0", // PART 1 RESULT
-"0" // PART 2 RESULT
+"2" // PART 2 RESULT
         )
     }
 
