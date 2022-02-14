@@ -83,10 +83,9 @@ fn main() {
         println!("{}.{:03}ms", elapsed / 1000, elapsed % 1000);
         println!("----------");
     }
-
+    
     pub fn load_input(day: usize) -> Vec<Vec<String>> {
-        let whole_input = std::fs::read_to_string(format!("{}/{}", "inputs", day))
-            .expect("Can't open/read input file");
+        let whole_input = std::fs::read_to_string(format!("{}/{}", "inputs", day)).expect("Can't open/read input file");
         utils::load_input(&whole_input)
     }
 }
