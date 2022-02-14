@@ -1,9 +1,0 @@
-error[E0554]: `#![feature]` may not be used on the stable release channel
- --> /Users/alex/Documents/Programming/Rust/advent-of-code/target/debug/build/eyre-93718c8c3d17d677/out/probe.rs:2:5
-  |
-2 |     #![feature(backtrace)]
-  |     ^^^^^^^^^^^^^^^^^^^^^^
-
-error: aborting due to previous error
-
-For more information about this error, try `rustc --explain E0554`.
