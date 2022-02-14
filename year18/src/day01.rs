@@ -1,10 +1,13 @@
+use std::collections::HashSet;
+
 // Potential improvements:
 //
 pub fn day01(input_lines: &[Vec<String>]) -> (String, String) {
     let answer1 = input_lines[0]
                         .iter()
                         .fold(0, |accumulator, line| accumulator + line.parse::<i32>().unwrap());
-    let mut frequencies = vec![0];
+    let mut frequencies = HashSet::new();
+    frequencies.insert(0);
     let mut accumulator = 0;
     'outer: loop {
         for line in &input_lines[0] {
@@ -13,7 +16,8 @@ pub fn day01(input_lines: &[Vec<String>]) -> (String, String) {
             if frequencies.contains(&accumulator) {
                 break 'outer
             }
-            frequencies.push(accumulator);
+            frequencies.insert(accumulator);
+            
         }
     }
     let answer2 = accumulator;
