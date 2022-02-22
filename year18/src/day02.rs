@@ -1,6 +1,6 @@
 // Potential improvements:
 //
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 pub fn day02(input_lines: &[Vec<String>]) -> (String, String) { 
     let char_maps: Vec<HashMap<char, i32>> = input_lines[0].iter().map(
@@ -18,8 +18,22 @@ pub fn day02(input_lines: &[Vec<String>]) -> (String, String) {
         accumulator + char_map.values().any(|&val| val == 3) as i32
     );
     let answer1 = twos * threes;
+    
+    let sets: HashSet<String> = input_lines[0].iter().map(
+        |id| id.chars().enumerate().fold(HashSet::new(), |mut sub_ids_set, (i, _)| -> HashSet<String> {
+                let mut string = id.clone();
+                string.replace_range(i..i+1, "*");
+                sub_ids_set.insert(string);
+                sub_ids_set
+            }
+        )
+    ).fold(HashSet::new(), |mut unique_sub_ids_set, sub_ids_set| {
+        unique_sub_ids_set.extend(sub_ids_set);
+        unique_sub_ids_set
+    });
+    println!("{:?}", sets);
     let answer2 = 0;
-    (format!("{}", answer1), format!("{}", answer2))
+    (format!("{}", answer1), format!("{:?}", answer2))
 }
 
 #[cfg(test)]
@@ -30,9 +44,9 @@ mod tests {
     #[test]
     fn check_day02_case01() {
         full_test(
-"", // INPUT STRING
-"0", // PART 1 RESULT
-"0" // PART 2 RESULT
+            "abcdef\nbababc\nabbcde\nabcccd\naabcdd\nabcdee\nababab\n", // INPUT STRING
+            "12", // PART 1 RESULT
+            "abcde" // PART 2 RESULT
         )
     }
 
