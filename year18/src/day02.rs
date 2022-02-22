@@ -1,8 +1,23 @@
 // Potential improvements:
 //
+use std::collections::HashMap;
 
-pub fn day02(_input_lines: &[Vec<String>]) -> (String, String) {
-    let answer1 = 0;
+pub fn day02(input_lines: &[Vec<String>]) -> (String, String) { 
+    let char_maps: Vec<HashMap<char, i32>> = input_lines[0].iter().map(
+        |id| id.chars().fold(
+                HashMap::new(), |mut map, c| {
+                *map.entry(c).or_insert(0) += 1;
+                map
+            }
+        )
+    ).collect();
+    let twos = char_maps.iter().fold(0, |accumulator, char_map| 
+        accumulator + char_map.values().any(|&val| val == 2) as i32
+    );
+    let threes = char_maps.iter().fold(0, |accumulator, char_map| 
+        accumulator + char_map.values().any(|&val| val == 3) as i32
+    );
+    let answer1 = twos * threes;
     let answer2 = 0;
     (format!("{}", answer1), format!("{}", answer2))
 }
