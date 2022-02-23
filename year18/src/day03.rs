@@ -1,5 +1,6 @@
 // Potential improvements:
 //
+extern crate nalgebra as na;
 
 pub fn day03(_input_lines: &[Vec<String>]) -> (String, String) {
     let answer1 = 0;
