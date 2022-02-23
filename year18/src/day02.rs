@@ -19,23 +19,39 @@ pub fn day02(input_lines: &[Vec<String>]) -> (String, String) {
     );
     let answer1 = twos * threes;
     
-    let vec_of_subid_sets: Vec<HashSet<String>> = input_lines[0].iter().map(
-        |id| id.chars().enumerate().fold(HashSet::new(), |mut sub_ids_set, (i, _)| {
+    // For every ID in the list, cycle through it's characters, replacing each with a *
+    // (resulting in permuted IDs) then add all these permutations of the IDs to a single vector.
+    // E.g. The input file
+    //   abc
+    //   def
+    //   ghi
+    // goes to
+    //   [ '*bc', 'a*c', 'ab*', '*ef', 'd*f', 'de*', '*hi', 'g*i', 'gh*' ]
+    let permuted_ids: Vec<String> = input_lines[0].iter().map(
+        |id| id.chars().enumerate().fold(Vec::new(), |mut permutations, (i, _)| {
                 let mut string = id.clone();
                 string.replace_range(i..i+1, "*");
-                sub_ids_set.insert(string);
-                sub_ids_set
+                permutations.push(string);
+                permutations
             }
         )
-    ).collect();
-    let _ = vec_of_subid_sets.iter().fold(HashSet::new(), |mut unique_sub_ids_set, sub_ids_set| {
-        let intersection = unique_sub_ids_set.intersection(&sub_ids_set);
-        
-        unique_sub_ids_set.extend(sub_ids_set.clone());
-        unique_sub_ids_set
+    ).fold(Vec::new(), |mut all_permutations, permutations| {
+        all_permutations.extend(permutations);
+        all_permutations
     });
-    let answer2 = 0;
-    (format!("{}", answer1), format!("{:?}", answer2))
+
+    // Add all the permuted IDs to a set until an entry already exists.
+    // Remove the '*' placeholder before yielding the answer. 
+    let mut answer2 = String::new() ;
+    let mut permutated_ids_set = HashSet::new();
+    for id in permuted_ids.iter() {
+        if !permutated_ids_set.insert(id) {
+            answer2 = id.replace("*","");
+            break
+        }
+    }
+    
+    (format!("{}", answer1), format!("{}", answer2))
 }
 
 #[cfg(test)]
