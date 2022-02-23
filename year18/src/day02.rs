@@ -19,19 +19,21 @@ pub fn day02(input_lines: &[Vec<String>]) -> (String, String) {
     );
     let answer1 = twos * threes;
     
-    let sets: HashSet<String> = input_lines[0].iter().map(
-        |id| id.chars().enumerate().fold(HashSet::new(), |mut sub_ids_set, (i, _)| -> HashSet<String> {
+    let vec_of_subid_sets: Vec<HashSet<String>> = input_lines[0].iter().map(
+        |id| id.chars().enumerate().fold(HashSet::new(), |mut sub_ids_set, (i, _)| {
                 let mut string = id.clone();
                 string.replace_range(i..i+1, "*");
                 sub_ids_set.insert(string);
                 sub_ids_set
             }
         )
-    ).fold(HashSet::new(), |mut unique_sub_ids_set, sub_ids_set| {
-        unique_sub_ids_set.extend(sub_ids_set);
+    ).collect();
+    let _ = vec_of_subid_sets.iter().fold(HashSet::new(), |mut unique_sub_ids_set, sub_ids_set| {
+        let intersection = unique_sub_ids_set.intersection(&sub_ids_set);
+        
+        unique_sub_ids_set.extend(sub_ids_set.clone());
         unique_sub_ids_set
     });
-    println!("{:?}", sets);
     let answer2 = 0;
     (format!("{}", answer1), format!("{:?}", answer2))
 }
