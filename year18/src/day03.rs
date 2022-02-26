@@ -4,6 +4,7 @@ use std::collections::HashSet;
 use itertools::Itertools;
 use regex::Regex;
 use std::str::FromStr;
+use std::time::Instant;
 
 #[derive(Copy, Clone, Debug, Eq, Hash, PartialEq)]
 struct SquareInch {
@@ -70,15 +71,24 @@ impl FabricClaim {
 }
 
 pub fn day03(input_lines: &[Vec<String>]) -> (String, String) {
+    let now = Instant::now();
 
-    let fabric_claims: HashSet<FabricClaim> = input_lines[0].iter().fold(HashSet::new(), |mut map, line| {
-        let fabric_claim = FabricClaim::from_input_line(line);
-        map.insert(fabric_claim);
-        map
-    });
+    let fabric_claims: HashSet<FabricClaim> = input_lines[0]
+        .iter()
+        .fold(HashSet::new(), |mut map, line| {
+            let fabric_claim = FabricClaim::from_input_line(line);
+            map.insert(fabric_claim);
+            map
+        }
+    );
 
-    let (_, contested_inches) = fabric_claims.iter()
-        .fold((HashSet::<SquareInch>::new(), HashSet::<SquareInch>::new()), |(mut claimed, mut contested), claim| {
+    println!("Finished parsing input lines after {}ms.", now.elapsed().as_millis());
+
+    let (_, contested_inches) = fabric_claims
+        .iter()
+        .fold(
+        (HashSet::<SquareInch>::new(), HashSet::<SquareInch>::new()),
+            |(mut claimed, mut contested), claim| {
             let square_inches = claim.all_sq_inches();
             for square_inch in square_inches {
                 if !claimed.insert(square_inch) {
@@ -101,8 +111,8 @@ pub fn day03(input_lines: &[Vec<String>]) -> (String, String) {
     }
 
     let answer1 = contested_inches.len();
-    let answer2 = all_claim_ids.difference(&contested_claim_ids); // all_ids.difference(&contested_ids);
-    (format!("{}", answer1), format!("{:?}", answer2))
+    let answer2: Vec<&i32> = all_claim_ids.difference(&contested_claim_ids).collect();
+    (format!("{}", answer1), format!("{:?}", answer2[0]))
 }
 
 #[cfg(test)]
