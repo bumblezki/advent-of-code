@@ -9,3 +9,5 @@ publish = ["metaswitch"]
 [dependencies]
 regex = "1.5.4"
 itertools = "0.10.3"
+dateparser = "0.1.6"
+chrono = "0.4.19"
