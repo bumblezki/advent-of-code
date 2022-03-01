@@ -11,11 +11,8 @@ pub fn day02(input_lines: &[Vec<String>]) -> (String, String) {
             }
         )
     ).collect();
-    let twos = char_maps.iter().fold(0, |accumulator, char_map| 
-        accumulator + char_map.values().any(|&val| val == 2) as i32
-    );
-    let threes = char_maps.iter().fold(0, |accumulator, char_map| 
-        accumulator + char_map.values().any(|&val| val == 3) as i32
+    let (twos, threes) = char_maps.iter().fold((0, 0), |(twos, threes), char_map| 
+        (twos + char_map.values().any(|&val| val == 2) as i32, threes + char_map.values().any(|&val| val == 3) as i32)
     );
     let answer1 = twos * threes;
     
