@@ -64,9 +64,9 @@ impl Ord for SecurityEvent {
     }
 }
 
-fn count_minutes_asleep(records: &Vec<&SecurityEvent>) -> u32 {
-    records.iter().filter(|event| event.event_type == SecurityEventType::Sleep).zip(
-        records.iter().filter(|event| event.event_type == SecurityEventType::Wake)
+fn count_minutes_asleep(events: &Vec<&SecurityEvent>) -> u32 {
+    events.iter().filter(|event| event.event_type == SecurityEventType::Sleep).zip(
+        events.iter().filter(|event| event.event_type == SecurityEventType::Wake)
     ).fold(0, |mut total, (sleep, wake)| {
         for _ in sleep.minute..wake.minute {
             total += 1;
@@ -75,9 +75,9 @@ fn count_minutes_asleep(records: &Vec<&SecurityEvent>) -> u32 {
     })
 }
 
-fn map_minutes_asleep(records: &Vec<&SecurityEvent>) -> HashMap<u32, u32> {
-    records.iter().filter(|event| event.event_type == SecurityEventType::Sleep).zip(
-        records.iter().filter(|event| event.event_type == SecurityEventType::Wake)
+fn map_minutes_asleep(events: &Vec<&SecurityEvent>) -> HashMap<u32, u32> {
+    events.iter().filter(|event| event.event_type == SecurityEventType::Sleep).zip(
+        events.iter().filter(|event| event.event_type == SecurityEventType::Wake)
     ).fold(HashMap::new(), |mut map, (sleep, wake)| {
         for minute in sleep.minute..wake.minute {
             *map.entry(minute).or_insert(0) += 1;
@@ -87,14 +87,17 @@ fn map_minutes_asleep(records: &Vec<&SecurityEvent>) -> HashMap<u32, u32> {
 }
 
 pub fn day04(input_lines: &[Vec<String>]) -> (String, String) {
-    // Part 1
-    let mut security_events: Vec<SecurityEvent> = input_lines[0].iter().map(|line | {
+
+    // Parse the input into a vector of all security events and sort these chronologically.
+    let mut all_security_events: Vec<SecurityEvent> = input_lines[0].iter().map(|line | {
         SecurityEvent::from_input_line(line)
     }).collect();
-    security_events.sort_by(|event1, event2| event1.cmp(event2));
+    all_security_events.sort_by(|event1, event2| event1.cmp(event2));
 
+    // Convert the vector of all security events into a HashMap where the key is the ID of a guard and the
+    // value is a vector of all the security events associated with that guard that are of type Wake or Sleep.
     let mut guard_id: u32 = 0;
-    let per_guard_records: HashMap<u32, Vec<&SecurityEvent>> = security_events
+    let security_events_per_guard: HashMap<u32, Vec<&SecurityEvent>> = all_security_events
         .iter().fold(HashMap::new(), |mut hashmap, event| {
             if let SecurityEventType::StartShift(id) = event.event_type {
                 guard_id = id;
@@ -107,46 +110,53 @@ pub fn day04(input_lines: &[Vec<String>]) -> (String, String) {
             hashmap
         }
     );
-    let guards_minutes_asleep = per_guard_records
-        .iter().fold(HashMap::new(), |mut map, (&guard_id, record)| {
-            map.insert(guard_id, count_minutes_asleep(record));
+    // A HashMap where the key is the ID a guard and the value is a the total time they spent asleep while on shift.
+    let total_minutes_asleep_per_guard = security_events_per_guard
+        .iter().fold(HashMap::new(), |mut map, (&guard_id, events)| {
+            map.insert(guard_id, count_minutes_asleep(events));
             map
         }
     );
-    let sleepiest_guard = *guards_minutes_asleep
+    // A HashMap where the key is the ID a guard and the value is a vector of all the security events associated with
+    // that guard in chronological order.
+    let sleep_schedules_per_guard = &security_events_per_guard
+        .iter().fold(HashMap::new(), |mut map, (&guard_id, events)| {
+            map.insert(guard_id, map_minutes_asleep(events));
+            map
+        }
+    );
+
+    // Part 1
+    let id_of_guard_with_most_total_minutes_asleep = total_minutes_asleep_per_guard
         .iter()
-        .max_by(|&a, &b| a.1.cmp(&b.1))
-        .map(|(k, _v)| k)
+        .max_by(|&guard1_id_and_total, &guard2_id_and_total| guard1_id_and_total.1.cmp(&guard2_id_and_total.1))
+        .map(|(id, _total)| id )
         .unwrap();
-    let sleepiest_guard_records = per_guard_records.get(&sleepiest_guard).unwrap();
-    let sleepiest_guard_map = map_minutes_asleep(sleepiest_guard_records);
-    let sleepiest_minute = *sleepiest_guard_map
+    let sleep_schedule_of_guard_with_most_total_minutes_asleep = sleep_schedules_per_guard.get(id_of_guard_with_most_total_minutes_asleep).unwrap();
+    let sleepiest_minute_of_guard_with_most_total_minutes_asleep = sleep_schedule_of_guard_with_most_total_minutes_asleep
         .iter()
-        .max_by(|&a, &b| a.1.cmp(&b.1))
-        .map(|(k, _v)| k)
+        .max_by(|&minute1_and_total, &minute2_and_total| minute1_and_total.1.cmp(&minute2_and_total.1))
+        .map(|(minute, _total)| minute)
         .unwrap();
-    let answer1 = sleepiest_guard * sleepiest_minute;
+    let answer1 = id_of_guard_with_most_total_minutes_asleep * sleepiest_minute_of_guard_with_most_total_minutes_asleep;
 
     // Part 2
-    let guards_sleep_maps = &per_guard_records
-        .iter().fold(HashMap::new(), |mut map, (&guard_id, record)| {
-            map.insert(guard_id, map_minutes_asleep(record));
+    let most_consistently_asleep_minute_and_count_per_guard = sleep_schedules_per_guard
+        .iter()
+        .fold(HashMap::new(), |mut map, (&guard_id, sleep_map)| {
+            if let Some(most_consistently_asleep_minute_and_count) = sleep_map
+                .iter()
+                .max_by(|&a, &b| a.1.cmp(&b.1))
+                .map(|(minute, count)| (minute, count)) {
+                map.insert(guard_id, most_consistently_asleep_minute_and_count);
+            }
             map
         }
     );
-    let guard_most_asleep_minutes = guards_sleep_maps.iter().fold(HashMap::new(), |mut map, (&guard_id, sleep_map)| {
-        if let Some(minute_most_asleep) = sleep_map
-            .iter()
-            .max_by(|&a, &b| a.1.cmp(&b.1))
-            .map(|(k, v)| (k, v)) {
-            map.insert(guard_id, minute_most_asleep);
-        }
-        map
-    });
-    let answer2 = guard_most_asleep_minutes
+    let answer2 = most_consistently_asleep_minute_and_count_per_guard
         .iter()
-        .max_by(|&(_, &a), &(_, &b)| a.1.cmp(&b.1))
-        .map(|(k, &(minute, _))| k * minute)
+        .max_by(|&(_, &guard1_minute_and_count), &(_, &guard2_minute_and_count)| guard1_minute_and_count.1.cmp(&guard2_minute_and_count.1))
+        .map(|(id, &(minute, _count))| id * minute)
         .unwrap();
 
     (format!("{}", answer1), format!("{}", answer2))
