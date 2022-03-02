@@ -1,10 +1,20 @@
-// Potential improvements:
-//
+use itertools::Itertools;
 
-pub fn day05(_input_lines: &[Vec<String>]) -> (String, String) {
+pub fn day05(input_lines: &[Vec<String>]) -> (String, String) {
+    
+    let mut original_chain = input_lines[0][0].chars();
+    loop {
+        let (current, next) = match original_chain.next_tuple() {
+            Some((char1, char2)) => (char1, char2),
+            None => break
+        };
+        if current == next {
+            break
+        }
+    }
     let answer1 = 0;
     let answer2 = 0;
-    (format!("{}", answer1), format!("{}", answer2))
+    (format!("{:?}", answer1), format!("{}", answer2))
 }
 
 #[cfg(test)]
