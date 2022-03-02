@@ -37,6 +37,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "counter"
+version = "0.5.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "878793089e7b461e0f316f45eb6d12ef73c0e5ec5194d372617eb47bb61a85ed"
+dependencies = [
+ "num-traits",
+]
+
+[[package]]
 name = "dateparser"
 version = "0.1.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -122,6 +131,7 @@ name = "template"
 version = "0.1.0"
 dependencies = [
  "chrono",
+ "counter",
  "dateparser",
  "itertools",
  "regex",

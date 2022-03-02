@@ -5,6 +5,7 @@ use chrono::prelude::*;
 use dateparser;
 use regex::Regex;
 use std::collections::HashMap;
+use counter::Counter;
 
 #[derive(Debug, PartialEq, Eq, PartialOrd)]
 enum SecurityEventType {
@@ -75,14 +76,12 @@ fn count_minutes_asleep(events: &Vec<&SecurityEvent>) -> u32 {
     })
 }
 
-fn map_minutes_asleep(events: &Vec<&SecurityEvent>) -> HashMap<u32, u32> {
+fn map_minutes_asleep(events: &Vec<&SecurityEvent>) -> Counter<u32> {
     events.iter().filter(|event| event.event_type == SecurityEventType::Sleep).zip(
         events.iter().filter(|event| event.event_type == SecurityEventType::Wake)
-    ).fold(HashMap::new(), |mut map, (sleep, wake)| {
-        for minute in sleep.minute..wake.minute {
-            *map.entry(minute).or_insert(0) += 1;
-        }
-        map
+    ).fold(Counter::new(), |mut counter, (sleep, wake)| {
+        counter.extend((sleep.minute..wake.minute).collect::<Counter<_>>());
+        counter
     })
 }
 
