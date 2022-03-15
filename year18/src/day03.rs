@@ -1,6 +1,5 @@
-// Potential improvements:
-//
 use std::collections::HashSet;
+use std::hash::Hash;
 use itertools::Itertools;
 use regex::Regex;
 use std::str::FromStr;
@@ -16,8 +15,6 @@ struct SquareInch {
 struct FabricClaim {
     id: i32,
     top_left: SquareInch,
-    top_right: SquareInch,
-    bottom_left: SquareInch,
     width: i32,
     height: i32,
 }
@@ -27,19 +24,25 @@ impl FabricClaim {
         Self {
             id,
             top_left: SquareInch { x, y },
-            top_right: SquareInch { x: x+width, y },
-            bottom_left: SquareInch { x, y: y+height },
             width,
             height,
         }
+    }
+
+    fn right_edge_x(&self) -> i32 {
+        self.top_left.x + self.width - 1
+    }
+
+    fn bottom_edge_y(&self) -> i32 {
+        self.top_left.y + self.height - 1
     }
 
     fn all_sq_inches(&self) -> Vec<SquareInch> {
         let mut sq_inches = Vec::with_capacity(
             self.height as usize * self.width as usize
         );
-        for x in self.top_left.x..self.top_right.x {
-            for y in self.top_left.y..self.bottom_left.y {
+        for x in self.top_left.x..self.right_edge_x() + 1 {
+            for y in self.top_left.y..self.bottom_edge_y() + 1 {
                 sq_inches.push( SquareInch { x, y } );
             }
         }
@@ -55,14 +58,14 @@ impl FabricClaim {
             let width = FromStr::from_str(&cap[4]).unwrap();
             let height = FromStr::from_str(&cap[5]).unwrap();
             FabricClaim::new(id, x, y, width, height)
-        }).unwrap()
+        }).expect("Failed to match regular expression against input.")
     }
 
     fn overlaps(&self, other: &FabricClaim) -> bool {
-        if self.top_left.x > other.top_right.x ||
-        self.top_right.x < other.top_left.x ||
-        self.top_left.y > other.bottom_left.y ||
-        self.bottom_left.y < other.top_left.y {
+        if self.top_left.x > other.right_edge_x() ||
+        self.right_edge_x() < other.top_left.x ||
+        self.top_left.y > other.bottom_edge_y() ||
+        self.bottom_edge_y() < other.top_left.y {
             false
         } else {
             true
@@ -73,46 +76,38 @@ impl FabricClaim {
 pub fn day03(input_lines: &[Vec<String>]) -> (String, String) {
     let now = Instant::now();
 
-    let fabric_claims: HashSet<FabricClaim> = input_lines[0]
+    let fabric_claims: Vec<FabricClaim> = input_lines[0]
         .iter()
-        .fold(HashSet::new(), |mut map, line| {
-            let fabric_claim = FabricClaim::from_input_line(line);
-            map.insert(fabric_claim);
-            map
-        }
-    );
-
+        .map(|line| 
+            FabricClaim::from_input_line(line)
+        )
+        .collect();
+    
     println!("Finished parsing input lines after {}ms.", now.elapsed().as_millis());
 
-    let (_, contested_inches) = fabric_claims
-        .iter()
-        .fold(
-        (HashSet::<SquareInch>::new(), HashSet::<SquareInch>::new()),
-            |(mut claimed, mut contested), claim| {
-            let square_inches = claim.all_sq_inches();
-            for square_inch in square_inches {
-                if !claimed.insert(square_inch) {
-                    contested.insert(square_inch);
-                }
+    let mut claimed_sq_inches = HashSet::<SquareInch>::new();
+    let mut contested_sq_inches = HashSet::<SquareInch>::new();
+    for claim in &fabric_claims {
+        for sq_inch in claim.all_sq_inches() {
+            if !claimed_sq_inches.insert(sq_inch) {
+                contested_sq_inches.insert(sq_inch);
             }
-            (claimed, contested)
         }
-    );
+    }
 
-    let all_claim_ids: HashSet<i32> = HashSet::from_iter(1..fabric_claims.len() as i32 + 1);
-    let mut contested_claim_ids = HashSet::<i32>::new();
+    let mut uncontested_claim_ids: HashSet<i32> = HashSet::from_iter(1..fabric_claims.len() as i32 + 1);
     for combination in fabric_claims.iter().combinations(2) {
         let this_claim = combination[0];
         let that_claim = combination[1];
         if this_claim.overlaps(that_claim) {
-            contested_claim_ids.insert(this_claim.id);
-            contested_claim_ids.insert(that_claim.id);
+            uncontested_claim_ids.remove(&this_claim.id);
+            uncontested_claim_ids.remove(&that_claim.id);
         }
     }
 
-    let answer1 = contested_inches.len();
-    let answer2: Vec<&i32> = all_claim_ids.difference(&contested_claim_ids).collect();
-    (format!("{}", answer1), format!("{:?}", answer2[0]))
+    let answer1 = contested_sq_inches.len();
+    let answer2 = uncontested_claim_ids;
+    (format!("{}", answer1), format!("{:?}", answer2))
 }
 
 #[cfg(test)]
@@ -123,9 +118,9 @@ mod tests {
     #[test]
     fn check_day03_case01() {
         full_test(
-"", // INPUT STRING
-"0", // PART 1 RESULT
-"0" // PART 2 RESULT
+            "#1 @ 1,3: 4x4\n#2 @ 3,1: 4x4\n#3 @ 5,5: 2x2", // INPUT STRING
+            "4", // PART 1 RESULT
+            "{3}" // PART 2 RESULT
         )
     }
 
