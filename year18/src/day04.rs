@@ -1,4 +1,5 @@
 use std::cmp::Ordering;
+use std::fmt;
 use std::iter::FromIterator;
 use std::str::FromStr;
 use chrono::prelude::*;
@@ -12,6 +13,17 @@ enum SecurityEventType {
     Wake,
     Sleep,
     StartShift(u32)
+}
+
+impl fmt::Display for SecurityEventType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let description = match &self {
+            Self::Wake => "Wake".to_string(),
+            Self::Sleep => "Sleep".to_string(),
+            Self::StartShift(id) => format!("Guard {}: Start Shift", id),
+        };
+        write!(f, "{}", description)
+    }
 }
 
 #[derive(Debug, Eq, PartialEq, PartialOrd)]
@@ -73,20 +85,23 @@ impl Ord for SecurityEvent {
     }
 }
 
+fn guard_records_valid(events: &Vec<SecurityEvent>) -> bool {
+    events.chunks(2).all(|pair| {
+        pair[0].event_type == SecurityEventType::Sleep &&
+        pair[1].event_type == SecurityEventType::Wake
+    })
+}
+
 fn count_minutes_asleep(events: &Vec<SecurityEvent>) -> u32 {
-    events.iter().filter(|&event| event.event_type == SecurityEventType::Sleep).zip(
-        events.iter().filter(|&event| event.event_type == SecurityEventType::Wake)
-    ).fold(0, |mut total, (sleep, wake)| {
-        total += wake.minute - sleep.minute;
+    events.chunks(2).fold(0, |mut total, pair| {
+        total += pair[1].minute - pair[0].minute;
         total
     })
 }
 
 fn map_minutes_asleep(events: &Vec<SecurityEvent>) -> Counter<u32> {
-    events.iter().filter(|&event| event.event_type == SecurityEventType::Sleep).zip(
-        events.iter().filter(|&event| event.event_type == SecurityEventType::Wake)
-    ).fold(Counter::new(), |mut counter, (sleep, wake)| {
-        counter.extend((sleep.minute..wake.minute).collect::<Counter<_>>());
+    events.chunks(2).fold(Counter::new(), |mut counter, pair| {
+        counter.extend((pair[0].minute..pair[1].minute).collect::<Counter<u32>>());
         counter
     })
 }
@@ -117,6 +132,11 @@ pub fn day04(input_lines: &[Vec<String>]) -> (String, String) {
             security_events_per_guard
                 .entry(guard_id)
                 .and_modify(|events| events.push(security_event));
+        }
+    }
+    for (guard_id, events) in &security_events_per_guard {
+        if !guard_records_valid(events) {
+            panic!("The records for security guard {} must alternate between Sleep and Wake.", guard_id);
         }
     }
 
