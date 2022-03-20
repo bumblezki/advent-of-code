@@ -7,17 +7,12 @@ pub fn day01(input_lines: &[Vec<String>]) -> (String, String) {
                         .iter()
                         .fold(0, |accumulator, line| accumulator + line.parse::<i32>().unwrap());
     let mut frequencies = HashSet::new();
-    frequencies.insert(0);
     let mut accumulator = 0;
-    'outer: loop {
-        for line in &input_lines[0] {
-            accumulator += line.parse::<i32>().unwrap();
-            
-            if frequencies.contains(&accumulator) {
-                break 'outer
-            }
-            frequencies.insert(accumulator);
-            
+    frequencies.insert(accumulator);
+    for line in input_lines[0].iter().cycle() {
+        accumulator += line.parse::<i32>().unwrap();
+        if !frequencies.insert(accumulator) {
+            break
         }
     }
     let answer2 = accumulator;
