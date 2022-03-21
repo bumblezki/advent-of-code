@@ -1,54 +1,41 @@
 use std::fmt;
+use std::thread;
 
 const ALPHABET: &'static str = "abcdefghijklmnopqrstuvwxyz";
 
-#[derive(Clone, Debug, PartialEq)]
-enum Polarity {
-    Upper,
-    Lower
-}
-
 #[derive(Clone, Debug)]
 struct PolymerUnit {
-    raw_char: char,
-    lowercase_char: char,
-    polarity: Polarity,
+    char: char,
 }
 
 impl PolymerUnit {
 
     fn new(char: char) -> Self {
-        let polarity: Polarity = if char.is_lowercase() {
-            Polarity::Lower
-        } else {
-            Polarity::Upper
-        };
-        Self {
-            raw_char: char,
-            lowercase_char: char.to_ascii_lowercase(),
-            polarity,
-        }
+        Self { char }
     }
 
     fn reacts_with(&self, other: &Self) -> bool {
-        self.lowercase_char == other.lowercase_char && self.polarity != other.polarity
+        self.char.to_ascii_lowercase() == other.char.to_ascii_lowercase() && self.char.is_lowercase() != other.char.is_lowercase()
     }
 
     fn is_type(&self, char: char) -> bool {
-        self.lowercase_char == char.to_ascii_lowercase()
+        self.char.to_ascii_lowercase() == char.to_ascii_lowercase()
     }
 }
 
 impl fmt::Display for PolymerUnit {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.raw_char)
+        write!(f, "{}", self.char)
     }
 }
 
-fn react_polymer_chain(chain: &mut Vec<PolymerUnit>) -> &mut Vec<PolymerUnit> {
+fn react_polymer_chain(chain: &mut Vec<PolymerUnit>) -> usize {
     let mut restart_idx: usize = 0;
     'outer: loop {
-        for (idx, pair) in chain.windows(2).enumerate().skip(restart_idx) {
+        for (idx, pair) in chain
+                .windows(2)
+                .enumerate()
+                .skip(restart_idx) {
             if pair[0].reacts_with(&pair[1]) {
                 chain.remove(idx);
                 chain.remove(idx);
@@ -60,9 +47,8 @@ fn react_polymer_chain(chain: &mut Vec<PolymerUnit>) -> &mut Vec<PolymerUnit> {
                 continue 'outer;
             }
         }
-        return chain;
+        return chain.len();
     }
-    
 }
 
 pub fn day05(input_lines: &[Vec<String>]) -> (String, String) {
@@ -72,19 +58,26 @@ pub fn day05(input_lines: &[Vec<String>]) -> (String, String) {
         .collect::<Vec<PolymerUnit>>();
 
     let mut polymer_chain = original_polymer_chain.clone();
-    let reacted_polymer_chain = react_polymer_chain(&mut polymer_chain);
-    let answer1 = reacted_polymer_chain.len();
+    let answer1 = react_polymer_chain(&mut polymer_chain);
 
+    let mut handles = Vec::new();
     let mut shortest_reacted_polymer_chain_len = original_polymer_chain.len();
     for char in ALPHABET.chars() {
-        let mut polymer_chain = original_polymer_chain
-            .clone()
-            .into_iter()
-            .filter(|unit| !unit.is_type(char))
-            .collect::<Vec<PolymerUnit>>();
-        let reacted_polymer_chain = react_polymer_chain(&mut polymer_chain);
-        if reacted_polymer_chain.len() < shortest_reacted_polymer_chain_len {
-            shortest_reacted_polymer_chain_len = reacted_polymer_chain.len();
+        let polymer_chain = original_polymer_chain.clone();
+        let handle = thread::spawn(move|| {
+            let mut reduced_polymer_chain = polymer_chain 
+                .into_iter()
+                .filter(|unit| !unit.is_type(char))
+                .collect::<Vec<PolymerUnit>>();
+                react_polymer_chain(&mut reduced_polymer_chain)
+        });
+        handles.push(handle);
+    }
+
+    for handle in handles {
+        let chain_len = handle.join().unwrap();
+        if chain_len < shortest_reacted_polymer_chain_len {
+            shortest_reacted_polymer_chain_len = chain_len
         }
     }
 
