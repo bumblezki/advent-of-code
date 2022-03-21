@@ -1,47 +1,35 @@
 use std::fmt;
+use std::time::Instant;
 
 const ALPHABET: &'static str = "abcdefghijklmnopqrstuvwxyz";
 
-#[derive(Clone, Debug, PartialEq)]
-enum Polarity {
-    Upper,
-    Lower
-}
-
 #[derive(Clone, Debug)]
 struct PolymerUnit {
-    raw_char: char,
-    lowercase_char: char,
-    polarity: Polarity,
+    char: char,
+    is_lowercase: bool,
 }
 
 impl PolymerUnit {
 
     fn new(char: char) -> Self {
-        let polarity: Polarity = if char.is_lowercase() {
-            Polarity::Lower
-        } else {
-            Polarity::Upper
-        };
         Self {
-            raw_char: char,
-            lowercase_char: char.to_ascii_lowercase(),
-            polarity,
+            char,
+            is_lowercase: char.is_lowercase(),
         }
     }
 
     fn reacts_with(&self, other: &Self) -> bool {
-        self.lowercase_char == other.lowercase_char && self.polarity != other.polarity
+        self.char.to_ascii_lowercase() == other.char.to_ascii_lowercase() && self.is_lowercase != other.is_lowercase
     }
 
     fn is_type(&self, char: char) -> bool {
-        self.lowercase_char == char.to_ascii_lowercase()
+        self.char.to_ascii_lowercase() == char.to_ascii_lowercase()
     }
 }
 
 impl fmt::Display for PolymerUnit {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.raw_char)
+        write!(f, "{}", self.char)
     }
 }
 
@@ -62,21 +50,28 @@ fn react_polymer_chain(chain: &mut Vec<PolymerUnit>) -> &mut Vec<PolymerUnit> {
         }
         return chain;
     }
-    
 }
 
 pub fn day05(input_lines: &[Vec<String>]) -> (String, String) {
+    let now = Instant::now();
+
     let original_polymer_chain = input_lines[0][0]
         .chars()
         .map(|char| PolymerUnit::new(char))
         .collect::<Vec<PolymerUnit>>();
 
+    println!("Finished parsing input lines into polymer chain after {}ms.", now.elapsed().as_millis());
+
     let mut polymer_chain = original_polymer_chain.clone();
     let reacted_polymer_chain = react_polymer_chain(&mut polymer_chain);
     let answer1 = reacted_polymer_chain.len();
 
+    println!("Found answer 1 after {}ms.", now.elapsed().as_millis());
+
+
     let mut shortest_reacted_polymer_chain_len = original_polymer_chain.len();
     for char in ALPHABET.chars() {
+        let new_now = Instant::now();
         let mut polymer_chain = original_polymer_chain
             .clone()
             .into_iter()
@@ -86,6 +81,7 @@ pub fn day05(input_lines: &[Vec<String>]) -> (String, String) {
         if reacted_polymer_chain.len() < shortest_reacted_polymer_chain_len {
             shortest_reacted_polymer_chain_len = reacted_polymer_chain.len();
         }
+        println!("Reacted sans-{} chain after {}ms, which took {}ms.", char, now.elapsed().as_millis(), new_now.elapsed().as_millis());
     }
 
     let answer2 = shortest_reacted_polymer_chain_len;
