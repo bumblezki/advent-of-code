@@ -1,5 +1,5 @@
 use std::fmt;
-use std::time::Instant;
+use std::thread;
 
 const ALPHABET: &'static str = "abcdefghijklmnopqrstuvwxyz";
 
@@ -29,10 +29,13 @@ impl fmt::Display for PolymerUnit {
     }
 }
 
-fn react_polymer_chain(chain: &mut Vec<PolymerUnit>) -> &mut Vec<PolymerUnit> {
+fn react_polymer_chain(chain: &mut Vec<PolymerUnit>) -> usize {
     let mut restart_idx: usize = 0;
     'outer: loop {
-        for (idx, pair) in chain.windows(2).enumerate().skip(restart_idx) {
+        for (idx, pair) in chain
+                .windows(2)
+                .enumerate()
+                .skip(restart_idx) {
             if pair[0].reacts_with(&pair[1]) {
                 chain.remove(idx);
                 chain.remove(idx);
@@ -44,40 +47,38 @@ fn react_polymer_chain(chain: &mut Vec<PolymerUnit>) -> &mut Vec<PolymerUnit> {
                 continue 'outer;
             }
         }
-        return chain;
+        return chain.len();
     }
 }
 
 pub fn day05(input_lines: &[Vec<String>]) -> (String, String) {
-    let now = Instant::now();
-
     let original_polymer_chain = input_lines[0][0]
         .chars()
         .map(|char| PolymerUnit::new(char))
         .collect::<Vec<PolymerUnit>>();
 
-    println!("Finished parsing input lines into polymer chain after {}ms.", now.elapsed().as_millis());
-
     let mut polymer_chain = original_polymer_chain.clone();
-    let reacted_polymer_chain = react_polymer_chain(&mut polymer_chain);
-    let answer1 = reacted_polymer_chain.len();
+    let answer1 = react_polymer_chain(&mut polymer_chain);
 
-    println!("Found answer 1 after {}ms.", now.elapsed().as_millis());
-
-
+    let mut handles = Vec::new();
     let mut shortest_reacted_polymer_chain_len = original_polymer_chain.len();
     for char in ALPHABET.chars() {
-        let new_now = Instant::now();
-        let mut polymer_chain = original_polymer_chain
-            .clone()
-            .into_iter()
-            .filter(|unit| !unit.is_type(char))
-            .collect::<Vec<PolymerUnit>>();
-        let reacted_polymer_chain = react_polymer_chain(&mut polymer_chain);
-        if reacted_polymer_chain.len() < shortest_reacted_polymer_chain_len {
-            shortest_reacted_polymer_chain_len = reacted_polymer_chain.len();
+        let polymer_chain = original_polymer_chain.clone();
+        let handle = thread::spawn(move|| {
+            let mut reduced_polymer_chain = polymer_chain 
+                .into_iter()
+                .filter(|unit| !unit.is_type(char))
+                .collect::<Vec<PolymerUnit>>();
+                react_polymer_chain(&mut reduced_polymer_chain)
+        });
+        handles.push(handle);
+    }
+
+    for handle in handles {
+        let chain_len = handle.join().unwrap();
+        if chain_len < shortest_reacted_polymer_chain_len {
+            shortest_reacted_polymer_chain_len = chain_len
         }
-        println!("Reacted sans-{} chain after {}ms, which took {}ms.", char, now.elapsed().as_millis(), new_now.elapsed().as_millis());
     }
 
     let answer2 = shortest_reacted_polymer_chain_len;
