@@ -6,20 +6,16 @@ const ALPHABET: &'static str = "abcdefghijklmnopqrstuvwxyz";
 #[derive(Clone, Debug)]
 struct PolymerUnit {
     char: char,
-    is_lowercase: bool,
 }
 
 impl PolymerUnit {
 
     fn new(char: char) -> Self {
-        Self {
-            char,
-            is_lowercase: char.is_lowercase(),
-        }
+        Self { char }
     }
 
     fn reacts_with(&self, other: &Self) -> bool {
-        self.char.to_ascii_lowercase() == other.char.to_ascii_lowercase() && self.is_lowercase != other.is_lowercase
+        self.char.to_ascii_lowercase() == other.char.to_ascii_lowercase() && self.char.is_lowercase() != other.char.is_lowercase()
     }
 
     fn is_type(&self, char: char) -> bool {
