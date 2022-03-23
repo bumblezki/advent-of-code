@@ -1,5 +1,5 @@
 use std::fmt;
-use std::thread;
+use itertools::Itertools;
 
 const ALPHABET: &'static str = "abcdefghijklmnopqrstuvwxyz";
 
@@ -10,15 +10,15 @@ struct PolymerUnit {
 
 impl PolymerUnit {
 
-    fn new(char: char) -> Self {
+    fn _new(char: char) -> Self {
         Self { char }
     }
 
-    fn reacts_with(&self, other: &Self) -> bool {
+    fn _reacts_with(&self, other: &Self) -> bool {
         self.char.to_ascii_lowercase() == other.char.to_ascii_lowercase() && self.char.is_lowercase() != other.char.is_lowercase()
     }
 
-    fn is_type(&self, char: char) -> bool {
+    fn _is_type(&self, char: char) -> bool {
         self.char.to_ascii_lowercase() == char.to_ascii_lowercase()
     }
 }
@@ -29,14 +29,14 @@ impl fmt::Display for PolymerUnit {
     }
 }
 
-fn react_polymer_chain(chain: &mut Vec<PolymerUnit>) -> usize {
+fn _react_polymer_chain(chain: &mut Vec<PolymerUnit>) -> usize {
     let mut restart_idx: usize = 0;
     'outer: loop {
         for (idx, pair) in chain
                 .windows(2)
                 .enumerate()
                 .skip(restart_idx) {
-            if pair[0].reacts_with(&pair[1]) {
+            if pair[0]._reacts_with(&pair[1]) {
                 chain.remove(idx);
                 chain.remove(idx);
                 if idx != 0 {
@@ -51,37 +51,43 @@ fn react_polymer_chain(chain: &mut Vec<PolymerUnit>) -> usize {
     }
 }
 
-pub fn day05(input_lines: &[Vec<String>]) -> (String, String) {
-    let original_polymer_chain = input_lines[0][0]
-        .chars()
-        .map(|char| PolymerUnit::new(char))
-        .collect::<Vec<PolymerUnit>>();
 
-    let mut polymer_chain = original_polymer_chain.clone();
-    let answer1 = react_polymer_chain(&mut polymer_chain);
+fn reaction(a: &char, b: &char) -> bool {
+    a.to_ascii_lowercase() == b.to_ascii_lowercase() && a.is_lowercase() != b.is_ascii_lowercase()
+}
 
-    let mut handles = Vec::new();
-    let mut shortest_reacted_polymer_chain_len = original_polymer_chain.len();
-    for char in ALPHABET.chars() {
-        let polymer_chain = original_polymer_chain.clone();
-        let handle = thread::spawn(move|| {
-            let mut reduced_polymer_chain = polymer_chain 
-                .into_iter()
-                .filter(|unit| !unit.is_type(char))
-                .collect::<Vec<PolymerUnit>>();
-                react_polymer_chain(&mut reduced_polymer_chain)
-        });
-        handles.push(handle);
-    }
-
-    for handle in handles {
-        let chain_len = handle.join().unwrap();
-        if chain_len < shortest_reacted_polymer_chain_len {
-            shortest_reacted_polymer_chain_len = chain_len
+fn unreacted_chain_len(chain: &Vec<char>) -> usize {
+    let mut unreacted = Vec::<&char>::new();
+    for c in chain {
+        match unreacted.last() {
+            Some(&last) if reaction(last, c) => {
+                unreacted.pop();
+            },
+            _ => unreacted.push(c)
         }
     }
+    unreacted.len()
+}
 
-    let answer2 = shortest_reacted_polymer_chain_len;
+pub fn day05(input_lines: &[Vec<String>]) -> (String, String) {
+    let original_polymer_chain = input_lines[0][0]
+        .chars().collect_vec();
+    let answer1 = unreacted_chain_len(&original_polymer_chain);
+
+    let answer2 = ALPHABET
+        .chars()
+        .into_iter()
+        .map(|letter| {
+            unreacted_chain_len(&original_polymer_chain
+                .clone()
+                .into_iter()
+                .filter(|&c| c.to_ascii_lowercase() != letter )
+                .collect()
+            )
+        })
+        .min()
+        .unwrap();
+    
     (format!("{:?}", answer1), format!("{}", answer2))
 }
 
