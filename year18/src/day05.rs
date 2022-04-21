@@ -1,6 +1,6 @@
 use std::fmt;
 use itertools::Itertools;
-
+// @belle, hopefully you can see this comment and expand the lines below to comment on
 const ALPHABET: &'static str = "abcdefghijklmnopqrstuvwxyz";
 
 #[derive(Clone, Debug)]
