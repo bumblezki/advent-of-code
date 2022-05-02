@@ -4,6 +4,10 @@
 use std::collections::{BTreeMap, HashSet};
 use regex::Regex;
 
+fn secs(c: char) -> i32 {
+    c as i32 - 4
+}
+
 struct Graph {
     edges: BTreeMap<char, HashSet<char>>,
     queue: Vec<char>,
@@ -65,7 +69,7 @@ pub fn day07(input_lines: &[Vec<String>]) -> (String, String) {
     let mut order: Vec<char> = Vec::new();
     graph.queue_completed_steps();
     loop {
-        println!("{}", graph);
+        // println!("{}", graph);
         match graph.queue.pop() {
             Some(step) => {
                 graph.complete(&step);
