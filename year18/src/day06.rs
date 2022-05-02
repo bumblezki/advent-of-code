@@ -52,6 +52,10 @@ impl Point {
             None => return None
         }
     }
+
+    fn get_cumulative_distances(&self, destinations: &Vec<Point>) -> i32 {
+        destinations.iter().fold(0, |accumulator, destination| accumulator + self.manhattan_distance(destination))
+    }
 }
 
 fn get_max_x_and_y(destinations: &Vec<Point>) -> (i32, i32) {
@@ -91,12 +95,12 @@ pub fn day06(input_lines: &[Vec<String>]) -> (String, String) {
     let edges: Vec<Point> = get_edges(&max_x, &max_y);
     let all_points: Vec<Point> = get_all_points(&max_x, &max_y);
 
-    let mut infite_destinations: HashSet<Point> = HashSet::new();
+    let mut infinite_destinations: HashSet<Point> = HashSet::new();
     let mut destination_map: HashMap<Point, i32> = HashMap::new();
-    for point in all_points {
+    for point in all_points.clone() {
         if let Some(closest_destination) = point.get_closest_destination(&destinations) {
             if edges.contains(&point) {
-                infite_destinations.insert(closest_destination.clone());
+                infinite_destinations.insert(closest_destination.clone());
             }
             *destination_map.entry(closest_destination).or_insert(0) += 1;
         }
@@ -104,13 +108,21 @@ pub fn day06(input_lines: &[Vec<String>]) -> (String, String) {
 
     let (_, area): (&Point, &i32) = destination_map
         .iter()
-        .filter(|&(dest, _)| !infite_destinations.contains(dest))
+        .filter(|&(dest, _)| !infinite_destinations.contains(dest))
         .max_by(|&(_, &a), &(_, &b)| a.cmp(&b))
         .expect("Failed to find maximum area.");
 
 
     let answer1 = area;
-    let answer2 = 0;
+
+    let mut in_region_count = 0;
+    for point in all_points {
+        if point.get_cumulative_distances(&destinations) < 10000 {
+            in_region_count += 1;
+        }
+    }
+
+    let answer2 = in_region_count;
     (format!("{}", answer1), format!("{}", answer2))
 }
 
