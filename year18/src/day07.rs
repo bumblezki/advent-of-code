@@ -6,6 +6,7 @@ use regex::Regex;
 
 struct Graph {
     edges: BTreeMap<char, HashSet<char>>,
+    queue: Vec<char>,
 }
 
 impl Graph {
@@ -27,7 +28,7 @@ impl Graph {
                 edges.insert(step, HashSet::<char>::new());
             }
         }
-        Graph { edges }
+        Graph { edges, queue: Vec::new() }
     }
 
     fn complete(&mut self, step: &char) {
@@ -37,39 +38,38 @@ impl Graph {
         }
         println!("Completed: {}", step);
     }
+
+    fn queue_completed_steps(&mut self) {
+        for (step, prereqs) in self.edges.iter() {
+            if !self.queue.contains(step) && prereqs.is_empty() {
+                self.queue.push(step.clone());
+                self.queue.sort();
+                self.queue.reverse();
+                println!("Queue: {:?}", self.queue);
+            }
+        }
+    }
 }
 
 impl std::fmt::Display for Graph {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         for (step, prereqs) in self.edges.iter() {
-            writeln!(f, "{}:     {:?}", step, prereqs)?;
+            writeln!(f, "{}  <-  {:?}", step, prereqs)?;
         }
         Ok(())
-    }
-}
-
-fn queue_completed_steps(q: &mut Vec<char>, graph: &mut Graph) {
-    for (step, prereqs) in graph.edges.iter() {
-        if !q.contains(step) && prereqs.is_empty() {
-            q.push(step.clone());
-            q.sort();
-            q.reverse();
-        }
     }
 }
 
 pub fn day07(input_lines: &[Vec<String>]) -> (String, String) {
     let mut graph = Graph::from_input(&input_lines[0]);
     let mut order: Vec<char> = Vec::new();
-    let mut q: Vec<char> = Vec::new();
-    queue_completed_steps(&mut q, &mut graph);
+    graph.queue_completed_steps();
     loop {
         println!("{}", graph);
-        println!("{:?}", q);
-        match q.pop() {
+        match graph.queue.pop() {
             Some(step) => {
                 graph.complete(&step);
-                queue_completed_steps(&mut q, &mut graph);
+                graph.queue_completed_steps();
                 order.push(step);
             },
             None => break,
