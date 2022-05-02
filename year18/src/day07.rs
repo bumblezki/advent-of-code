@@ -49,9 +49,9 @@ impl Graph {
                 self.queue.push(step.clone());
                 self.queue.sort();
                 self.queue.reverse();
-                println!("Queue: {:?}", self.queue);
             }
         }
+        println!("Queue: {}", String::from_iter(self.queue.clone()));
     }
 }
 
