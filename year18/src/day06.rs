@@ -3,6 +3,7 @@
 
 use std::{str::FromStr, num::ParseIntError, collections::{HashMap, HashSet}};
 
+const MAX_PROXIMITY: i32 = 10000;
 
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 struct Point {
@@ -117,7 +118,7 @@ pub fn day06(input_lines: &[Vec<String>]) -> (String, String) {
 
     let mut in_region_count = 0;
     for point in all_points {
-        if point.get_cumulative_distances(&destinations) < 10000 {
+        if point.get_cumulative_distances(&destinations) < MAX_PROXIMITY {
             in_region_count += 1;
         }
     }
@@ -134,9 +135,14 @@ mod tests {
     #[test]
     fn check_day06_case01() {
         full_test(
-"", // INPUT STRING
-"0", // PART 1 RESULT
-"0" // PART 2 RESULT
+"1, 1
+1, 6
+8, 3
+3, 4
+5, 5
+8, 9", // INPUT STRING
+"17", // PART 1 RESULT
+"16" // PART 2 RESULT, MUST CHANGE MAX_PROXIMITY CONSTANT TO 32 FOR THIS TO PASS
         )
     }
 
