@@ -1,8 +1,8 @@
 // Potential improvements:
 //
 
-use std::collections::{BTreeMap, HashSet};
 use regex::Regex;
+use std::collections::{BTreeMap, HashSet};
 
 fn secs(c: char) -> i32 {
     c as i32 - 4
@@ -32,7 +32,10 @@ impl Graph {
                 edges.insert(step, HashSet::<char>::new());
             }
         }
-        Graph { edges, queue: Vec::new() }
+        Graph {
+            edges,
+            queue: Vec::new(),
+        }
     }
 
     fn complete(&mut self, step: &char) {
@@ -75,7 +78,7 @@ pub fn day07(input_lines: &[Vec<String>]) -> (String, String) {
                 graph.complete(&step);
                 graph.queue_completed_steps();
                 order.push(step);
-            },
+            }
             None => break,
         }
     }
@@ -92,20 +95,23 @@ mod tests {
     #[test]
     fn check_day07_case01() {
         full_test(
-"Step C must be finished before step A can begin.
+            "Step C must be finished before step A can begin.
 Step C must be finished before step F can begin.
 Step A must be finished before step B can begin.
 Step A must be finished before step D can begin.
 Step B must be finished before step E can begin.
 Step D must be finished before step E can begin.
 Step F must be finished before step E can begin.", // INPUT STRING
-"CABDFE", // PART 1 RESULT
-"0" // PART 2 RESULT
+            "CABDFE", // PART 1 RESULT
+            "0",      // PART 2 RESULT
         )
     }
 
     fn full_test(input_text: &str, part1_result: &str, part2_result: &str) {
         let input_lines = load_input(input_text);
-        assert_eq!(day07(&input_lines), (part1_result.to_string(), part2_result.to_string()));
+        assert_eq!(
+            day07(&input_lines),
+            (part1_result.to_string(), part2_result.to_string())
+        );
     }
 }
