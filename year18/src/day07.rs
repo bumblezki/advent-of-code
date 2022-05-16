@@ -4,9 +4,9 @@
 use regex::Regex;
 use std::collections::{BTreeMap, HashSet};
 
-fn secs(c: char) -> i32 {
-    c as i32 - 4
-}
+// fn secs(c: char) -> i32 {
+//     c as i32 - 4
+// }
 
 struct Graph {
     edges: BTreeMap<char, HashSet<char>>,
@@ -24,13 +24,11 @@ impl Graph {
             let v: char = chars[1];
             steps.insert(u);
             steps.insert(v);
-            let requirements = edges.entry(v).or_insert(HashSet::new());
+            let requirements = edges.entry(v).or_insert_with(HashSet::new);
             requirements.insert(u);
         }
         for step in steps {
-            if !edges.contains_key(&step) {
-                edges.insert(step, HashSet::<char>::new());
-            }
+            edges.entry(step).or_insert_with(HashSet::<char>::new);
         }
         Graph {
             edges,
@@ -39,9 +37,9 @@ impl Graph {
     }
 
     fn complete(&mut self, step: &char) {
-        self.edges.remove(&step);
+        self.edges.remove(step);
         for prereqs in self.edges.values_mut() {
-            prereqs.remove(&step);
+            prereqs.remove(step);
         }
         println!("Completed: {}", step);
     }
@@ -49,8 +47,8 @@ impl Graph {
     fn queue_completed_steps(&mut self) {
         for (step, prereqs) in self.edges.iter() {
             if !self.queue.contains(step) && prereqs.is_empty() {
-                self.queue.push(step.clone());
-                self.queue.sort();
+                self.queue.push(*step);
+                self.queue.sort_unstable();
                 self.queue.reverse();
             }
         }
@@ -71,20 +69,14 @@ pub fn day07(input_lines: &[Vec<String>]) -> (String, String) {
     let mut graph = Graph::from_input(&input_lines[0]);
     let mut order: Vec<char> = Vec::new();
     graph.queue_completed_steps();
-    loop {
-        // println!("{}", graph);
-        match graph.queue.pop() {
-            Some(step) => {
-                graph.complete(&step);
-                graph.queue_completed_steps();
-                order.push(step);
-            }
-            None => break,
-        }
+    while let Some(step) = graph.queue.pop() {
+        graph.complete(&step);
+        graph.queue_completed_steps();
+        order.push(step);
     }
     let answer1 = String::from_iter(order);
     let answer2 = 0;
-    (format!("{}", answer1), format!("{}", answer2))
+    (answer1, format!("{}", answer2))
 }
 
 #[cfg(test)]

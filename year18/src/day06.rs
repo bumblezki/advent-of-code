@@ -39,7 +39,7 @@ impl Point {
         (self.x - other.x).abs() + (self.y - other.y).abs()
     }
 
-    fn get_closest_destination(&self, destinations: &Vec<Point>) -> Option<Point> {
+    fn get_closest_destination(&self, destinations: &[Point]) -> Option<Point> {
         let destination_distances: Vec<(Point, i32)> = destinations
             .iter()
             .map(|dest| (dest.clone(), self.manhattan_distance(dest)))
@@ -65,14 +65,14 @@ impl Point {
         }
     }
 
-    fn get_cumulative_distances(&self, destinations: &Vec<Point>) -> i32 {
+    fn get_cumulative_distances(&self, destinations: &[Point]) -> i32 {
         destinations.iter().fold(0, |accumulator, destination| {
             accumulator + self.manhattan_distance(destination)
         })
     }
 }
 
-fn get_max_x_and_y(destinations: &Vec<Point>) -> (i32, i32) {
+fn get_max_x_and_y(destinations: &[Point]) -> (i32, i32) {
     (
         destinations
             .iter()

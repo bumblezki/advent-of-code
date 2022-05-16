@@ -62,15 +62,10 @@ impl FabricClaim {
     }
 
     fn overlaps(&self, other: &FabricClaim) -> bool {
-        if self.top_left.x > other.right_edge_x()
+        !self.top_left.x > other.right_edge_x()
             || self.right_edge_x() < other.top_left.x
             || self.top_left.y > other.bottom_edge_y()
             || self.bottom_edge_y() < other.top_left.y
-        {
-            false
-        } else {
-            true
-        }
     }
 }
 
