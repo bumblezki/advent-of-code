@@ -10,6 +10,7 @@ struct Point {
     y: i32
 }
 
+// SCC Implementing this so we can just parse::<Point>() is nice; I should use that pattern more often.
 impl FromStr for Point {
     type Err = ParseIntError;
 
@@ -29,10 +30,14 @@ impl Point {
     }
 
     fn manhattan_distance(&self, other: &Self) -> i32 {
+        // SCC cargo clippy will tell you this, but the `return ` is superfluous here
         return (self.x - other.x).abs() + (self.y - other.y).abs()
     }
 
     fn get_closest_destination(&self, destinations: &Vec<Point>) -> Option<Point> {
+        // SCC The processing with collects and clones here is slightly overcomplicated. You could do one of the following:
+        // 1. Not collect the destination_distances, and keep it as an Iterator.  Then you clone for the first use in shortest_distance, and use directly in the if test later, without having to call [into_]iter() each time.
+        // 2. Collect into a Vec of references to the duples, and then just call .iter() when getting the shortest_distance without having to clone() or [into_] it by handling the references instead (some small amount of other & additions and removals, plus a .clone for the return value, required).
         let destination_distances: Vec<(Point, i32)> = destinations
             .iter()
             .map(|dest| (dest.clone(), self.manhattan_distance(&dest)))
@@ -44,6 +49,7 @@ impl Point {
         match shortest_distance {
             Some((point, d)) => {
                 if destination_distances.iter().filter(|&(_, distance)| distance == &d).count() > 1 {
+                    // SCC again, all these `return ` statements are superfluous
                     return None
                 } else {
                     return Some(point)
@@ -53,6 +59,9 @@ impl Point {
         }
     }
 
+    // SCC Interesting - the way I'd intuitively implement this is as destinations.iter().map(manhattan_distance).sum(), but that may well be less efficient due to
+    // having to run through the list twice. This feels like something common enough that it might have a function directly for it, but I'm not aware of one offhand
+    // - or maybe it's something the compiler could spot and optimise? Might be worth discussing in the meeting later, but otherwise: nice optimisation :)
     fn get_cumulative_distances(&self, destinations: &Vec<Point>) -> i32 {
         destinations.iter().fold(0, |accumulator, destination| accumulator + self.manhattan_distance(destination))
     }
@@ -85,6 +94,7 @@ fn get_edges(max_x: &i32, max_y: &i32) -> Vec<Point> {
         edges.push(Point::new(0, y));
         edges.push(Point::new(*max_x, y));
     }
+    // SCC this has added each of the corners twice.  Probably not a concern but something that you'd want to be aware of if you're not already!
     edges
 }
 
@@ -93,10 +103,13 @@ pub fn day06(input_lines: &[Vec<String>]) -> (String, String) {
     let destinations: Vec<Point> = input_lines[0].iter().map(|line| line.parse::<Point>().unwrap()).collect();
     let (max_x, max_y): (i32, i32) = get_max_x_and_y(&destinations);
     let edges: Vec<Point> = get_edges(&max_x, &max_y);
+    // SCC feels a little inefficient to start from 0,0 when your data-set may be a considerably long way away from here.
+    // SCC In fact, I also think this would break if any of the co-ordinates were negative but might not do so in an obvious way i.e. by hitting an error; it might just give you the wrong answer.
     let all_points: Vec<Point> = get_all_points(&max_x, &max_y);
 
     let mut infinite_destinations: HashSet<Point> = HashSet::new();
     let mut destination_map: HashMap<Point, i32> = HashMap::new();
+    // SCC This might be cloning a pretty large Vec. We don't acutally need the object itself - you could just do `for point in &all_points` and it just works.
     for point in all_points.clone() {
         if let Some(closest_destination) = point.get_closest_destination(&destinations) {
             if edges.contains(&point) {
@@ -106,6 +119,8 @@ pub fn day06(input_lines: &[Vec<String>]) -> (String, String) {
         }
     }
 
+    // SCC This use of the duple has a bit of a code smell to me: we're relying on remembering which bit of the duple is which over and over.  I'd suggest creating another 
+    // struct of this duple and then we can refer to things with the field names.
     let (_, area): (&Point, &i32) = destination_map
         .iter()
         .filter(|&(dest, _)| !infinite_destinations.contains(dest))
