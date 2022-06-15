@@ -45,14 +45,14 @@ impl Graph {
         println!("Completed: {}", step);
     }
 
-    fn queue_completed_steps(&mut self, in_progress: &Vec<Option<char>>) {
+    fn queue_completed_steps(&mut self, in_progress: &[Option<char>]) {
         for (&step, prereqs) in self.edges.iter() {
             if !self.queue.contains(&step)
                 && prereqs.is_empty()
                 && !in_progress.contains(&Some(step))
             {
-                self.queue.push(step.clone());
-                self.queue.sort();
+                self.queue.push(step);
+                self.queue.sort_unstable();
                 self.queue.reverse();
             }
         }
@@ -73,21 +73,15 @@ pub fn day07(input_lines: &[Vec<String>]) -> (String, String) {
     let graph = Graph::from_input(&input_lines[0]);
     let mut order1: Vec<char> = Vec::new();
     let mut graph1 = graph.clone();
-    graph1.queue_completed_steps(&vec![]);
-    loop {
-        // println!("{}", graph);
-        match graph1.queue.pop() {
-            Some(step) => {
-                graph1.complete(&step);
-                graph1.queue_completed_steps(&vec![]);
-                order1.push(step);
-            }
-            None => break,
-        }
+    graph1.queue_completed_steps(&[]);
+    while let Some(step) = graph1.queue.pop() {
+        graph1.complete(&step);
+        graph1.queue_completed_steps(&[]);
+        order1.push(step);
     }
     let answer1 = String::from_iter(order1);
 
-    let mut graph2 = graph.clone();
+    let mut graph2 = graph;
     let mut workers = vec![0, 0, 0, 0, 0];
     let mut tasks: Vec<Option<char>> = vec![None, None, None, None, None];
     let mut counter = 0;
@@ -111,9 +105,9 @@ pub fn day07(input_lines: &[Vec<String>]) -> (String, String) {
             }
         }
 
-        for worker in 0..5 {
-            if workers[worker] != 0 {
-                workers[worker] -= 1;
+        for worker in workers.iter_mut() {
+            if worker != &mut 0 {
+                *worker -= 1;
             }
         }
 
@@ -127,7 +121,7 @@ pub fn day07(input_lines: &[Vec<String>]) -> (String, String) {
         }
     }
     let answer2 = counter;
-    (format!("{}", answer1), format!("{}", answer2))
+    (answer1, format!("{}", answer2))
 }
 
 #[cfg(test)]
