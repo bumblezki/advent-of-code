@@ -1,13 +1,16 @@
 // Potential improvements:
 //
 
-use std::{str::FromStr, num::ParseIntError, collections::{HashMap, HashSet}};
-
+use std::{
+    collections::{HashMap, HashSet},
+    num::ParseIntError,
+    str::FromStr,
+};
 
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 struct Point {
     x: i32,
-    y: i32
+    y: i32,
 }
 
 impl FromStr for Point {
@@ -19,7 +22,10 @@ impl FromStr for Point {
         let x_fromstr = coords[0].parse::<i32>()?;
         let y_fromstr = coords[1].parse::<i32>()?;
 
-        Ok(Point { x: x_fromstr, y: y_fromstr })
+        Ok(Point {
+            x: x_fromstr,
+            y: y_fromstr,
+        })
     }
 }
 
@@ -29,7 +35,7 @@ impl Point {
     }
 
     fn manhattan_distance(&self, other: &Self) -> i32 {
-        return (self.x - other.x).abs() + (self.y - other.y).abs()
+        return (self.x - other.x).abs() + (self.y - other.y).abs();
     }
 
     fn get_closest_destination(&self, destinations: &Vec<Point>) -> Option<Point> {
@@ -43,25 +49,40 @@ impl Point {
             .min_by(|&(_, d1), &(_, d2)| d1.cmp(&d2));
         match shortest_distance {
             Some((point, d)) => {
-                if destination_distances.iter().filter(|&(_, distance)| distance == &d).count() > 1 {
-                    return None
+                if destination_distances
+                    .iter()
+                    .filter(|&(_, distance)| distance == &d)
+                    .count()
+                    > 1
+                {
+                    return None;
                 } else {
-                    return Some(point)
+                    return Some(point);
                 }
             }
-            None => return None
+            None => return None,
         }
     }
 
     fn get_cumulative_distances(&self, destinations: &Vec<Point>) -> i32 {
-        destinations.iter().fold(0, |accumulator, destination| accumulator + self.manhattan_distance(destination))
+        destinations.iter().fold(0, |accumulator, destination| {
+            accumulator + self.manhattan_distance(destination)
+        })
     }
 }
 
 fn get_max_x_and_y(destinations: &Vec<Point>) -> (i32, i32) {
     (
-        destinations.iter().max_by(|a, b| a.x.cmp(&b.x)).expect("Failed to find max X value.").x,
-        destinations.iter().max_by(|a, b| a.y.cmp(&b.y)).expect("Failed to find max Y value.").y
+        destinations
+            .iter()
+            .max_by(|a, b| a.x.cmp(&b.x))
+            .expect("Failed to find max X value.")
+            .x,
+        destinations
+            .iter()
+            .max_by(|a, b| a.y.cmp(&b.y))
+            .expect("Failed to find max Y value.")
+            .y,
     )
 }
 
@@ -90,7 +111,10 @@ fn get_edges(max_x: &i32, max_y: &i32) -> Vec<Point> {
 
 // Modelled off https://davidburn.github.io/advent-2018/day6/
 pub fn day06(input_lines: &[Vec<String>]) -> (String, String) {
-    let destinations: Vec<Point> = input_lines[0].iter().map(|line| line.parse::<Point>().unwrap()).collect();
+    let destinations: Vec<Point> = input_lines[0]
+        .iter()
+        .map(|line| line.parse::<Point>().unwrap())
+        .collect();
     let (max_x, max_y): (i32, i32) = get_max_x_and_y(&destinations);
     let edges: Vec<Point> = get_edges(&max_x, &max_y);
     let all_points: Vec<Point> = get_all_points(&max_x, &max_y);
@@ -111,7 +135,6 @@ pub fn day06(input_lines: &[Vec<String>]) -> (String, String) {
         .filter(|&(dest, _)| !infinite_destinations.contains(dest))
         .max_by(|&(_, &a), &(_, &b)| a.cmp(&b))
         .expect("Failed to find maximum area.");
-
 
     let answer1 = area;
 
@@ -134,14 +157,17 @@ mod tests {
     #[test]
     fn check_day06_case01() {
         full_test(
-"", // INPUT STRING
-"0", // PART 1 RESULT
-"0" // PART 2 RESULT
+            "",  // INPUT STRING
+            "0", // PART 1 RESULT
+            "0", // PART 2 RESULT
         )
     }
 
     fn full_test(input_text: &str, part1_result: &str, part2_result: &str) {
         let input_lines = load_input(input_text);
-        assert_eq!(day06(&input_lines), (part1_result.to_string(), part2_result.to_string()));
+        assert_eq!(
+            day06(&input_lines),
+            (part1_result.to_string(), part2_result.to_string())
+        );
     }
 }
