@@ -51,12 +51,12 @@ pub fn day02(input_lines: &[Vec<String>]) -> (String, String) {
     let mut permutated_ids_set = HashSet::new();
     for id in permuted_ids.iter() {
         if !permutated_ids_set.insert(id) {
-            answer2 = id.replace("*", "");
+            answer2 = id.replace('*', "");
             break;
         }
     }
 
-    (format!("{}", answer1), format!("{}", answer2))
+    (answer1.to_string(), answer2)
 }
 
 #[cfg(test)]

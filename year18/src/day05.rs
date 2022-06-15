@@ -1,7 +1,7 @@
 use itertools::Itertools;
 use std::fmt;
 
-const ALPHABET: &'static str = "abcdefghijklmnopqrstuvwxyz";
+const ALPHABET: &str = "abcdefghijklmnopqrstuvwxyz";
 
 #[derive(Clone, Debug)]
 struct PolymerUnit {

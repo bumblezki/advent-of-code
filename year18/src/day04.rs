@@ -1,6 +1,5 @@
 use chrono::prelude::*;
 use counter::Counter;
-use dateparser;
 use regex::Regex;
 use std::cmp::Ordering;
 use std::collections::HashMap;
@@ -43,7 +42,7 @@ impl SecurityEvent {
         }
     }
 
-    fn from_input_line(input_line: &String) -> Self {
+    fn from_input_line(input_line: &str) -> Self {
         // We can't parse dates before 1970 into a DateTime object.
         // The actual year doesn't matter, only the order and the minute matter.
         // So manipulate the strings to effectively add 1000 years to all each date.
@@ -91,21 +90,21 @@ impl Ord for SecurityEvent {
     }
 }
 
-fn guard_records_valid(events: &Vec<SecurityEvent>) -> bool {
+fn guard_records_valid(events: &[SecurityEvent]) -> bool {
     events.chunks(2).all(|pair| {
         pair[0].event_type == SecurityEventType::Sleep
             && pair[1].event_type == SecurityEventType::Wake
     })
 }
 
-fn count_minutes_asleep(events: &Vec<SecurityEvent>) -> u32 {
+fn count_minutes_asleep(events: &[SecurityEvent]) -> u32 {
     events.chunks(2).fold(0, |mut total, pair| {
         total += pair[1].minute - pair[0].minute;
         total
     })
 }
 
-fn map_minutes_asleep(events: &Vec<SecurityEvent>) -> Counter<u32> {
+fn map_minutes_asleep(events: &[SecurityEvent]) -> Counter<u32> {
     events.chunks(2).fold(Counter::new(), |mut counter, pair| {
         counter.extend((pair[0].minute..pair[1].minute).collect::<Counter<u32>>());
         counter
@@ -118,7 +117,7 @@ pub fn day04(input_lines: &[Vec<String>]) -> (String, String) {
         .iter()
         .map(|line| SecurityEvent::from_input_line(line))
         .collect();
-    all_security_events.sort_by(|event1, event2| event1.cmp(event2));
+    all_security_events.sort();
 
     // Convert the vector of all security events into a HashMap where the key is the ID of a
     // guard and the value is a vector of all the Wake and Sleep security events associated
@@ -128,9 +127,7 @@ pub fn day04(input_lines: &[Vec<String>]) -> (String, String) {
     for security_event in all_security_events {
         if let SecurityEventType::StartShift(id) = security_event.event_type {
             guard_id = id;
-            if !security_events_per_guard.contains_key(&guard_id) {
-                security_events_per_guard.insert(guard_id, Vec::new());
-            }
+            security_events_per_guard.entry(guard_id).or_insert_with(Vec::new);
         } else {
             security_events_per_guard
                 .entry(guard_id)

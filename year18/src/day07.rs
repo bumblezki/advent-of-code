@@ -1,12 +1,11 @@
 // Potential improvements:
 //
-
 use itertools::all;
 use regex::Regex;
 use std::collections::{BTreeMap, HashSet};
 
-fn secs(task: char) -> i32 {
-    task as i32 - 4
+fn secs(c: char) -> i32 {
+    c as i32 - 4
 }
 
 #[derive(Clone)]
@@ -26,13 +25,11 @@ impl Graph {
             let v: char = chars[1];
             steps.insert(u);
             steps.insert(v);
-            let requirements = edges.entry(v).or_insert(HashSet::new());
+            let requirements = edges.entry(v).or_insert_with(HashSet::new);
             requirements.insert(u);
         }
         for step in steps {
-            if !edges.contains_key(&step) {
-                edges.insert(step, HashSet::<char>::new());
-            }
+            edges.entry(step).or_insert_with(HashSet::<char>::new);
         }
         Graph {
             edges,
@@ -41,9 +38,9 @@ impl Graph {
     }
 
     fn complete(&mut self, step: &char) {
-        self.edges.remove(&step);
+        self.edges.remove(step);
         for prereqs in self.edges.values_mut() {
-            prereqs.remove(&step);
+            prereqs.remove(step);
         }
         println!("Completed: {}", step);
     }
