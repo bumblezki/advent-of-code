@@ -1,8 +1,34 @@
 // Potential improvements:
 //
+use std::{collections::VecDeque, vec};
 
-pub fn day08(_input_lines: &[Vec<String>]) -> (String, String) {
-    let answer1 = 0;
+pub fn day08(input_lines: &[Vec<String>]) -> (String, String) {
+    let mut queue = input_lines[0][0]
+        .split(' ')
+        .map(|val| val.parse::<i32>().unwrap())
+        .collect::<VecDeque<i32>>();
+
+    let mut stack = vec![(queue.pop_front().unwrap(), queue.pop_front().unwrap())];
+    let mut total = 0;
+    loop {
+        let (mut child_count, metadata_count) = stack.pop().unwrap();
+
+        if child_count == 0 {
+            for _ in 1..=metadata_count {
+                total += queue.pop_front().unwrap();
+            }
+            if stack.is_empty() {
+                total += queue.iter().sum::<i32>();
+                break;
+            }
+        } else {
+            child_count -= 1;
+            stack.push((child_count, metadata_count));
+            stack.push((queue.pop_front().unwrap(), queue.pop_front().unwrap()));
+        }
+    }
+
+    let answer1 = total;
     let answer2 = 0;
     (format!("{}", answer1), format!("{}", answer2))
 }
@@ -15,9 +41,9 @@ mod tests {
     #[test]
     fn check_day08_case01() {
         full_test(
-            "",  // INPUT STRING
-            "0", // PART 1 RESULT
-            "0", // PART 2 RESULT
+            "2 3 0 3 10 11 12 1 1 0 1 99 2 1 1 2", // INPUT STRING
+            "138",                                 // PART 1 RESULT
+            "0",                                   // PART 2 RESULT
         )
     }
 
