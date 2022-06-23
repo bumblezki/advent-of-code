@@ -1,30 +1,25 @@
-// Potential improvements:
-//
-use std::{collections::VecDeque, vec};
-
 pub fn day08(input_lines: &[Vec<String>]) -> (String, String) {
     let mut queue = input_lines[0][0]
         .split(' ')
-        .map(|val| val.parse::<i32>().unwrap())
-        .collect::<VecDeque<i32>>();
+        .map(|val| val.parse::<i32>().unwrap());
 
-    let mut stack = vec![(queue.pop_front().unwrap(), queue.pop_front().unwrap())];
+    let mut stack = vec![(queue.next().unwrap(), queue.next().unwrap())];
     let mut total = 0;
     loop {
         let (mut child_count, metadata_count) = stack.pop().unwrap();
 
         if child_count == 0 {
             for _ in 1..=metadata_count {
-                total += queue.pop_front().unwrap();
+                total += queue.next().unwrap();
             }
             if stack.is_empty() {
-                total += queue.iter().sum::<i32>();
+                total += queue.sum::<i32>();
                 break;
             }
         } else {
             child_count -= 1;
             stack.push((child_count, metadata_count));
-            stack.push((queue.pop_front().unwrap(), queue.pop_front().unwrap()));
+            stack.push((queue.next().unwrap(), queue.next().unwrap()));
         }
     }
 
