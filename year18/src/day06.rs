@@ -64,7 +64,7 @@ impl Point {
                 } else {
                     Some(point)
                 }
-            },
+            }
             None => None,
         }
     }
@@ -139,7 +139,7 @@ pub fn day06(input_lines: &[Vec<String>]) -> (String, String) {
         }
     }
 
-    // SCC This use of the duple has a bit of a code smell to me: we're relying on remembering which bit of the duple is which over and over.  I'd suggest creating another 
+    // SCC This use of the duple has a bit of a code smell to me: we're relying on remembering which bit of the duple is which over and over.  I'd suggest creating another
     // struct of this duple and then we can refer to things with the field names.
     let (_, area): (&Point, &i32) = destination_map
         .iter()

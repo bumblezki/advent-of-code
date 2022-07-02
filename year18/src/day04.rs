@@ -127,7 +127,9 @@ pub fn day04(input_lines: &[Vec<String>]) -> (String, String) {
     for security_event in all_security_events {
         if let SecurityEventType::StartShift(id) = security_event.event_type {
             guard_id = id;
-            security_events_per_guard.entry(guard_id).or_insert_with(Vec::new);
+            security_events_per_guard
+                .entry(guard_id)
+                .or_insert_with(Vec::new);
         } else {
             security_events_per_guard
                 .entry(guard_id)

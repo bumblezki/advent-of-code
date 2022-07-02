@@ -1,10 +1,10 @@
 // Potential improvements:
 //
-use std::str::FromStr;
-use std::num::ParseIntError;
 use regex::Regex;
 use std::fmt;
+use std::num::ParseIntError;
 use std::ops::AddAssign;
+use std::str::FromStr;
 
 #[derive(Clone, Copy)]
 struct Vec2d {
@@ -19,20 +19,13 @@ impl Vec2d {
 }
 
 impl AddAssign for Vec2d {
-    fn add_assign(&mut self, other: Self) {
-        *self = Self {
-            x: self.x + other.x,
-            y: self.y + other.y,
-        };
+    fn add_assign(&mut self, other: Vec2d) {
+        *self = Vec2d::new(self.x + other.x, self.y + other.y);
     }
 }
 
 impl fmt::Display for Vec2d {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        // Write strictly the first element into the supplied output
-        // stream: `f`. Returns `fmt::Result` which indicates whether the
-        // operation succeeded or failed. Note that `write!` uses syntax which
-        // is very similar to `println!`.
         write!(f, "({}, {})", self.x, self.y)
     }
 }
@@ -44,6 +37,10 @@ struct Star {
 }
 
 impl Star {
+    fn new(p: Vec2d, v: Vec2d) -> Star {
+        Star { p, v }
+    }
+
     fn shoot(mut self) {
         self.p += self.v;
     }
@@ -51,10 +48,6 @@ impl Star {
 
 impl fmt::Display for Star {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        // Write strictly the first element into the supplied output
-        // stream: `f`. Returns `fmt::Result` which indicates whether the
-        // operation succeeded or failed. Note that `write!` uses syntax which
-        // is very similar to `println!`.
         write!(f, "Position: {}, \tVelocity: {}", self.p, self.v)
     }
 }
@@ -63,10 +56,20 @@ impl FromStr for Star {
     type Err = ParseIntError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let re = Regex::new(r"position=< ?(-?\d+),  ?(-?\d+)> velocity=< ?(-?\d+),  ?(-?\d+)>").unwrap();
+        let re =
+            Regex::new(r"position=< ?(-?\d+),  ?(-?\d+)> velocity=< ?(-?\d+),  ?(-?\d+)>").unwrap();
         let caps = re.captures(s).unwrap();
 
-        Ok(Star { p: Vec2d { x: caps.get(1).unwrap().as_str().parse::<i32>().unwrap(), y: caps.get(2).unwrap().as_str().parse::<i32>().unwrap() }, v: Vec2d { x: caps.get(3).unwrap().as_str().parse::<i32>().unwrap(), y: caps.get(4).unwrap().as_str().parse::<i32>().unwrap() } })
+        Ok(Star::new(
+            Vec2d::new(
+                caps.get(1).unwrap().as_str().parse::<i32>().unwrap(),
+                caps.get(2).unwrap().as_str().parse::<i32>().unwrap(),
+            ),
+            Vec2d::new(
+                caps.get(3).unwrap().as_str().parse::<i32>().unwrap(),
+                caps.get(4).unwrap().as_str().parse::<i32>().unwrap(),
+            ),
+        ))
     }
 }
 
@@ -79,7 +82,12 @@ struct NightSky {
 
 impl NightSky {
     fn new(stars: Vec<Star>, northwest: Vec2d, southeast: Vec2d) -> NightSky {
-        NightSky { stars, northwest, southeast, time: 0 }
+        NightSky {
+            stars,
+            northwest,
+            southeast,
+            time: 0,
+        }
     }
 
     fn update(&mut self) {
@@ -88,16 +96,34 @@ impl NightSky {
     }
 }
 
-
 pub fn day10(input_lines: &[Vec<String>]) -> (String, String) {
-    let stars: Vec<Star> = input_lines[0].iter().map(|line| line.parse::<Star>().unwrap()).collect();
-    let north: i32 = stars.iter().max_by(|star1, star2| star1.p.y.cmp(&star2.p.y)).map(|star| star.p.y).unwrap();
-    let south: i32 = stars.iter().min_by(|star1, star2| star1.p.y.cmp(&star2.p.y)).map(|star| star.p.y).unwrap();
-    let east: i32 = stars.iter().min_by(|star1, star2| star1.p.y.cmp(&star2.p.y)).map(|star| star.p.x).unwrap();
-    let west: i32 = stars.iter().max_by(|star1, star2| star1.p.y.cmp(&star2.p.y)).map(|star| star.p.x).unwrap();
+    let stars: Vec<Star> = input_lines[0]
+        .iter()
+        .map(|line| line.parse::<Star>().unwrap())
+        .collect();
+    let north: i32 = stars
+        .iter()
+        .max_by(|star1, star2| star1.p.y.cmp(&star2.p.y))
+        .map(|star| star.p.y)
+        .unwrap();
+    let south: i32 = stars
+        .iter()
+        .min_by(|star1, star2| star1.p.y.cmp(&star2.p.y))
+        .map(|star| star.p.y)
+        .unwrap();
+    let east: i32 = stars
+        .iter()
+        .min_by(|star1, star2| star1.p.y.cmp(&star2.p.y))
+        .map(|star| star.p.x)
+        .unwrap();
+    let west: i32 = stars
+        .iter()
+        .max_by(|star1, star2| star1.p.y.cmp(&star2.p.y))
+        .map(|star| star.p.x)
+        .unwrap();
 
     let mut sky = NightSky::new(stars, Vec2d::new(west, north), Vec2d::new(east, south));
-    
+
     while sky.time <= 100 {
         sky.update();
     }
