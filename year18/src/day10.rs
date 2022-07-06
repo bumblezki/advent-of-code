@@ -14,8 +14,8 @@ use winit::window::WindowBuilder;
 use winit_input_helper::WinitInputHelper;
 
 
-const WIDTH: u32 = 640;
-const HEIGHT: u32 = 480;
+const WIDTH: u32 = 50;
+const HEIGHT: u32 = 35;
 
 #[derive(Clone, Copy, PartialEq)]
 struct Vec2d {
@@ -52,7 +52,7 @@ impl Star {
         Star { p, v }
     }
 
-    fn shoot(mut self) {
+    fn shoot(&mut self) {
         self.p += self.v;
     }
 }
@@ -95,7 +95,9 @@ impl NightSky {
     }
 
     fn update(&mut self) {
-        self.stars.iter_mut().for_each(|star| star.shoot());
+        self.stars.iter_mut().for_each(|star| {
+            star.shoot();
+        });
         self.time += 1;
     }
 
@@ -176,7 +178,6 @@ pub fn day10(input_lines: &[Vec<String>]) -> (String, String) {
                 return;
             }
         }
-
         // Handle input events
         if input.update(&event) {
             // Close events
@@ -190,8 +191,12 @@ pub fn day10(input_lines: &[Vec<String>]) -> (String, String) {
                 pixels.resize_surface(size.width, size.height);
             }
 
-            // Update internal state and request a redraw
-            sky.update();
+            if input.key_pressed(VirtualKeyCode::Space) {
+                // Update internal state and request a redraw
+                sky.update();
+                sky.stars[0].shoot();
+                println!("{}", sky.time);
+            }
             window.request_redraw();
         }
     });
