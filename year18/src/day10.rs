@@ -14,8 +14,8 @@ use winit::window::WindowBuilder;
 use winit_input_helper::WinitInputHelper;
 
 
-const WIDTH: u32 = 50;
-const HEIGHT: u32 = 35;
+const WIDTH: u32 = 200;
+const HEIGHT: u32 = 160;
 
 #[derive(Clone, Copy, PartialEq)]
 struct Vec2d {
@@ -165,6 +165,7 @@ pub fn day10(input_lines: &[Vec<String>]) -> (String, String) {
         Pixels::new(WIDTH as u32, HEIGHT as u32, surface_texture).unwrap()
     };
 
+    let mut go = false;
     event_loop.run(move |event, _, control_flow| {
         // Draw the current frame
         if let Event::RedrawRequested(_) = event {
@@ -193,8 +194,10 @@ pub fn day10(input_lines: &[Vec<String>]) -> (String, String) {
 
             if input.key_pressed(VirtualKeyCode::Space) {
                 // Update internal state and request a redraw
+                go = !go
+            }
+            if go {
                 sky.update();
-                sky.stars[0].shoot();
                 println!("{}", sky.time);
             }
             window.request_redraw();
