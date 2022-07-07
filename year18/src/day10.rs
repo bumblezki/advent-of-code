@@ -5,7 +5,8 @@ use pixels::{Pixels, SurfaceTexture};
 use regex::Regex;
 use std::fmt;
 use std::num::ParseIntError;
-use std::ops::AddAssign;
+use itertools::Itertools;
+use std::ops::{AddAssign, SubAssign, Sub};
 use std::str::FromStr;
 use winit::dpi::LogicalSize;
 use winit::event::{Event, VirtualKeyCode};
@@ -35,6 +36,12 @@ impl AddAssign for Vec2d {
     }
 }
 
+impl SubAssign for Vec2d {
+    fn sub_assign(&mut self, other: Self) {
+        *self = Vec2d::new(self.x - other.x, self.y - other.y)
+    }
+}
+
 impl fmt::Display for Vec2d {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "({}, {})", self.x, self.y)
@@ -54,6 +61,15 @@ impl Star {
 
     fn shoot(&mut self) {
         self.p += self.v;
+    }
+
+    fn rewind(&mut self) {
+        self.p -= self.v;
+    }
+
+    fn touching(&self, other: &Self) -> bool {
+        self.p.x == other.p.x && self.p.y.abs_diff(other.p.y) == 1 ||
+        self.p.y == other.p.y && self.p.x.abs_diff(other.p.x) == 1
     }
 }
 
@@ -101,10 +117,30 @@ impl NightSky {
         self.time += 1;
     }
 
-    fn draw(&self, frame: &mut [u8]) {
+    fn rewind(&mut self) {
+        self.stars.iter_mut().for_each(|star| {
+            star.rewind();
+        });
+        self.time -= 1;
+    }
+
+    fn quarter_of_stars_touch(&self) -> bool {
+        let mut touching_count = 0;
+        for pair in self.stars.iter().permutations(2) {
+            if pair[0].touching(pair[1]) {
+                touching_count += 1;
+            }
+            if touching_count * 4 > self.stars.len() {
+                return true
+            }
+        }
+        return false
+    }
+
+    fn draw(&self, frame: &mut [u8], width: u32) {
         for (i, pixel) in frame.chunks_exact_mut(4).enumerate() {
-            let x = i as i32 % WIDTH as i32;
-            let y = i as i32 / WIDTH as i32;
+            let x = i as i32 % width as i32;
+            let y = i as i32 / width as i32;
 
             let p = Vec2d::new(x, y);
 
@@ -144,65 +180,71 @@ pub fn day10(input_lines: &[Vec<String>]) -> (String, String) {
     //     .max_by(|star1, star2| star1.p.y.cmp(&star2.p.y))
     //     .map(|star| star.p.x)
     //     .unwrap();
+    // let height = north.abs_diff(south);
+    // let width = east.abs_diff(west);
 
     let mut sky = NightSky::new(stars);
 
-    let event_loop = EventLoop::new();
-    let mut input = WinitInputHelper::new();
-    let window = {
-        let size = LogicalSize::new(WIDTH as f64, HEIGHT as f64);
-        WindowBuilder::new()
-            .with_title("Day 10")
-            .with_inner_size(size)
-            .with_min_inner_size(size)
-            .build(&event_loop)
-            .unwrap()
-    };
+    while !sky.quarter_of_stars_touch() {
+        sky.update();
+    }
 
-    let mut pixels = {
-        let window_size = window.inner_size();
-        let surface_texture = SurfaceTexture::new(window_size.width, window_size.height, &window);
-        Pixels::new(WIDTH as u32, HEIGHT as u32, surface_texture).unwrap()
-    };
+    // let event_loop = EventLoop::new();
+    // let mut input = WinitInputHelper::new();
+    // let window = {
+    //     let size = LogicalSize::new(width as f64, height as f64);
+    //     WindowBuilder::new()
+    //         .with_title("Day 10")
+    //         .with_inner_size(size)
+    //         .with_min_inner_size(size)
+    //         .build(&event_loop)
+    //         .unwrap()
+    // };
 
-    let mut go = false;
-    event_loop.run(move |event, _, control_flow| {
-        // Draw the current frame
-        if let Event::RedrawRequested(_) = event {
-            sky.draw(pixels.get_frame());
-            if pixels
-                .render()
-                .map_err(|e| error!("pixels.render() failed: {}", e))
-                .is_err()
-            {
-                *control_flow = ControlFlow::Exit;
-                return;
-            }
-        }
-        // Handle input events
-        if input.update(&event) {
-            // Close events
-            if input.key_pressed(VirtualKeyCode::Escape) || input.quit() {
-                *control_flow = ControlFlow::Exit;
-                return;
-            }
+    // let mut pixels = {
+    //     let window_size = window.inner_size();
+    //     let surface_texture = SurfaceTexture::new(window_size.width, window_size.height, &window);
+    //     Pixels::new(width, height, surface_texture).unwrap()
+    // };
 
-            // Resize the window
-            if let Some(size) = input.window_resized() {
-                pixels.resize_surface(size.width, size.height);
-            }
+    // let mut go = false;
+    // event_loop.run(move |event, _, control_flow| {
+    //     // Draw the current frame
+    //     if let Event::RedrawRequested(_) = event {
+    //         sky.draw(pixels.get_frame(), width);
+    //         if pixels
+    //             .render()
+    //             .map_err(|e| error!("pixels.render() failed: {}", e))
+    //             .is_err()
+    //         {
+    //             *control_flow = ControlFlow::Exit;
+    //             return;
+    //         }
+    //     }
+    //     // Handle input events
+    //     if input.update(&event) {
+    //         // Close events
+    //         if input.key_pressed(VirtualKeyCode::Escape) || input.quit() {
+    //             *control_flow = ControlFlow::Exit;
+    //             return;
+    //         }
 
-            if input.key_pressed(VirtualKeyCode::Space) {
-                // Update internal state and request a redraw
-                go = !go
-            }
-            if go {
-                sky.update();
-                println!("{}", sky.time);
-            }
-            window.request_redraw();
-        }
-    });
+    //         // Resize the window
+    //         if let Some(size) = input.window_resized() {
+    //             pixels.resize_surface(size.width, size.height);
+    //         }
+
+    //         if input.key_pressed(VirtualKeyCode::Space) {
+    //             // Update internal state and request a redraw
+    //             go = !go
+    //         }
+    //         if go {
+    //             sky.update();
+    //             println!("{}", sky.time);
+    //         }
+    //         window.request_redraw();
+    //     }
+    // });
 
     let answer1 = 0;
     let answer2 = 0;
