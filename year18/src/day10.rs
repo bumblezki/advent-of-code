@@ -5,71 +5,42 @@ use pixels::{Pixels, SurfaceTexture};
 use regex::Regex;
 use std::fmt;
 use std::num::ParseIntError;
-use itertools::Itertools;
-use std::ops::{AddAssign, SubAssign, Sub};
 use std::str::FromStr;
 use winit::dpi::LogicalSize;
 use winit::event::{Event, VirtualKeyCode};
 use winit::event_loop::{ControlFlow, EventLoop};
 use winit::window::WindowBuilder;
 use winit_input_helper::WinitInputHelper;
+use rand::Rng;
+use nalgebra::{Vector2, Matrix2};
 
-
-const WIDTH: u32 = 200;
-const HEIGHT: u32 = 160;
-
-#[derive(Clone, Copy, PartialEq)]
-struct Vec2d {
-    x: i32,
-    y: i32,
-}
-
-impl Vec2d {
-    fn new(x: i32, y: i32) -> Vec2d {
-        Vec2d { x, y }
-    }
-}
-
-impl AddAssign for Vec2d {
-    fn add_assign(&mut self, other: Vec2d) {
-        *self = Vec2d::new(self.x + other.x, self.y + other.y);
-    }
-}
-
-impl SubAssign for Vec2d {
-    fn sub_assign(&mut self, other: Self) {
-        *self = Vec2d::new(self.x - other.x, self.y - other.y)
-    }
-}
-
-impl fmt::Display for Vec2d {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "({}, {})", self.x, self.y)
-    }
-}
+const BACKGROUND: [u8; 4] = [0, 0, 100, 255];
+const FLIP_Y: Matrix2<i32> = Matrix2::new(1,0,0,-1);
 
 #[derive(Clone, Copy)]
 struct Star {
-    p: Vec2d,
-    v: Vec2d,
+    p: Vector2<i32>,
+    v: Vector2<i32>,
+    colour: [u8; 4],
 }
 
 impl Star {
-    fn new(p: Vec2d, v: Vec2d) -> Star {
-        Star { p, v }
+    fn new(p: Vector2<i32>, v: Vector2<i32>) -> Star {
+        let colour = [
+            rand::thread_rng().gen_range(100..=255),
+            rand::thread_rng().gen_range(100..=255),
+            rand::thread_rng().gen_range(100..=255),
+            255
+        ];
+        Star { p, v, colour }
     }
 
-    fn shoot(&mut self) {
-        self.p += self.v;
+    fn update(&mut self, time: i32) {
+        self.p += self.v * time;
     }
 
-    fn rewind(&mut self) {
-        self.p -= self.v;
-    }
-
-    fn touching(&self, other: &Self) -> bool {
-        self.p.x == other.p.x && self.p.y.abs_diff(other.p.y) == 1 ||
-        self.p.y == other.p.y && self.p.x.abs_diff(other.p.x) == 1
+    fn rewind(&mut self, time: i32) {
+        self.p -= self.v * time;
     }
 }
 
@@ -88,11 +59,11 @@ impl FromStr for Star {
         let caps = re.captures(s).unwrap();
 
         Ok(Star::new(
-            Vec2d::new(
+            Vector2::new(
                 caps.get(1).unwrap().as_str().parse::<i32>().unwrap(),
                 caps.get(2).unwrap().as_str().parse::<i32>().unwrap(),
             ),
-            Vec2d::new(
+            Vector2::new(
                 caps.get(3).unwrap().as_str().parse::<i32>().unwrap(),
                 caps.get(4).unwrap().as_str().parse::<i32>().unwrap(),
             ),
@@ -102,7 +73,33 @@ impl FromStr for Star {
 
 struct NightSky {
     stars: Vec<Star>,
-    time: u32,
+    time: i32,
+}
+
+impl fmt::Display for NightSky {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut s = String::new();
+        for j in (0..self.height()).rev() {
+            for i in 0..self.width() {
+                let p_prime = Vector2::new(
+                    i as i32,
+                    j as i32
+                );
+                let p = FLIP_Y * p_prime + self.northeast();
+                let mut square = '.';
+                for star in &self.stars {
+                    if p == star.p {
+                        square = '#';
+                        break
+                    }
+                }
+                s.push(square);
+                s.push(' ')
+            }
+            s.push('\n');
+        }
+        write!(f, "{}", s)
+    }
 }
 
 impl NightSky {
@@ -110,45 +107,80 @@ impl NightSky {
         NightSky { stars, time: 0 }
     }
 
-    fn update(&mut self) {
+    fn update(&mut self, time: i32) {
         self.stars.iter_mut().for_each(|star| {
-            star.shoot();
+            star.update(time);
         });
-        self.time += 1;
+        self.time += time;
     }
 
-    fn rewind(&mut self) {
+    fn rewind(&mut self, time: i32) {
         self.stars.iter_mut().for_each(|star| {
-            star.rewind();
+            star.rewind(time);
         });
-        self.time -= 1;
+        self.time -= time;
     }
 
-    fn quarter_of_stars_touch(&self) -> bool {
-        let mut touching_count = 0;
-        for pair in self.stars.iter().permutations(2) {
-            if pair[0].touching(pair[1]) {
-                touching_count += 1;
-            }
-            if touching_count * 4 > self.stars.len() {
-                return true
-            }
-        }
-        return false
+    fn north(&self) -> i32 {
+        self.stars
+            .iter()
+            .map(|star| star.p.y)
+            .max()
+            .unwrap()
     }
 
-    fn draw(&self, frame: &mut [u8], width: u32) {
+    fn east(&self) -> i32 {
+        self.stars
+            .iter()
+            .map(|star| star.p.x)
+            .min()
+            .unwrap()
+    }
+
+    fn south(&self) -> i32 {
+        self.stars
+            .iter()
+            .map(|star| star.p.y)
+            .min()
+            .unwrap()
+    }
+
+    fn west(&self) -> i32 {
+        self.stars
+            .iter()
+            .map(|star| star.p.x)
+            .max()
+            .unwrap()
+    }
+
+    fn height(&self) -> u32 {
+        self.north().abs_diff(self.south()) + 1
+    }
+
+    fn width(&self) -> u32 {
+        self.east().abs_diff(self.west()) + 1
+    }
+
+    fn northeast(&self) -> Vector2<i32> {
+        Vector2::new(self.east(), self.north())
+    }
+
+    fn draw(&self, frame: &mut [u8], height: u32, width: u32, northeast: Vector2<i32>) {
         for (i, pixel) in frame.chunks_exact_mut(4).enumerate() {
-            let x = i as i32 % width as i32;
-            let y = i as i32 / width as i32;
+            let p_prime = Vector2::new(
+                i as i32 % width as i32,
+                height as i32 - 1 - i as i32 / width as i32
+            );
 
-            let p = Vec2d::new(x, y);
+            let p: Vector2<i32> = FLIP_Y * p_prime + northeast;
 
-            let rgba = if self.stars.iter().any(|star| star.p == p) {
-                [0xff, 0xff, 0xff, 0xff]
-            } else {
-                [0x00, 0x00, 0x5a, 0xff]
-            };
+            let mut rgba = BACKGROUND;
+            for star in &self.stars {
+                if star.p == p {
+                    rgba = star.colour;
+                    break
+                }
+            }
 
             pixel.copy_from_slice(&rgba);
         }
@@ -160,91 +192,103 @@ pub fn day10(input_lines: &[Vec<String>]) -> (String, String) {
         .iter()
         .map(|line| line.parse::<Star>().unwrap())
         .collect();
-    // let north: i32 = stars
-    //     .iter()
-    //     .max_by(|star1, star2| star1.p.y.cmp(&star2.p.y))
-    //     .map(|star| star.p.y)
-    //     .unwrap();
-    // let south: i32 = stars
-    //     .iter()
-    //     .min_by(|star1, star2| star1.p.y.cmp(&star2.p.y))
-    //     .map(|star| star.p.y)
-    //     .unwrap();
-    // let east: i32 = stars
-    //     .iter()
-    //     .min_by(|star1, star2| star1.p.y.cmp(&star2.p.y))
-    //     .map(|star| star.p.x)
-    //     .unwrap();
-    // let west: i32 = stars
-    //     .iter()
-    //     .max_by(|star1, star2| star1.p.y.cmp(&star2.p.y))
-    //     .map(|star| star.p.x)
-    //     .unwrap();
-    // let height = north.abs_diff(south);
-    // let width = east.abs_diff(west);
 
     let mut sky = NightSky::new(stars);
 
-    while !sky.quarter_of_stars_touch() {
-        sky.update();
+    // Minimize the height of the sky.
+    let mut height = sky.height();
+    while sky.height() <= height {
+        height = sky.height();
+        sky.update(1);
     }
+    sky.rewind(1);
 
-    // let event_loop = EventLoop::new();
-    // let mut input = WinitInputHelper::new();
-    // let window = {
-    //     let size = LogicalSize::new(width as f64, height as f64);
-    //     WindowBuilder::new()
-    //         .with_title("Day 10")
-    //         .with_inner_size(size)
-    //         .with_min_inner_size(size)
-    //         .build(&event_loop)
-    //         .unwrap()
-    // };
+    let height = sky.height();
+    let width = sky.width();
+    let northeast = sky.northeast();
 
-    // let mut pixels = {
-    //     let window_size = window.inner_size();
-    //     let surface_texture = SurfaceTexture::new(window_size.width, window_size.height, &window);
-    //     Pixels::new(width, height, surface_texture).unwrap()
-    // };
+    let event_loop = EventLoop::new();
+    let mut input = WinitInputHelper::new();
+    let window = {
+        let size = LogicalSize::new(width as f64, height as f64);
+        WindowBuilder::new()
+            .with_title("Day 10")
+            .with_inner_size(size)
+            .with_min_inner_size(size)
+            .build(&event_loop)
+            .unwrap()
+    };
 
-    // let mut go = false;
-    // event_loop.run(move |event, _, control_flow| {
-    //     // Draw the current frame
-    //     if let Event::RedrawRequested(_) = event {
-    //         sky.draw(pixels.get_frame(), width);
-    //         if pixels
-    //             .render()
-    //             .map_err(|e| error!("pixels.render() failed: {}", e))
-    //             .is_err()
-    //         {
-    //             *control_flow = ControlFlow::Exit;
-    //             return;
-    //         }
-    //     }
-    //     // Handle input events
-    //     if input.update(&event) {
-    //         // Close events
-    //         if input.key_pressed(VirtualKeyCode::Escape) || input.quit() {
-    //             *control_flow = ControlFlow::Exit;
-    //             return;
-    //         }
+    let mut pixels = {
+        let window_size = window.inner_size();
+        let surface_texture = SurfaceTexture::new(window_size.width, window_size.height, &window);
+        Pixels::new(width, height, surface_texture).unwrap()
+    };
 
-    //         // Resize the window
-    //         if let Some(size) = input.window_resized() {
-    //             pixels.resize_surface(size.width, size.height);
-    //         }
+    let mut go = false;
+    let mut forward = true;
+    event_loop.run(move |event, _, control_flow| {
+        // Draw the current frame
+        if let Event::RedrawRequested(_) = event {
+            sky.draw(pixels.get_frame(), height, width, northeast);
+            if pixels
+                .render()
+                .map_err(|e| error!("pixels.render() failed: {}", e))
+                .is_err()
+            {
+                *control_flow = ControlFlow::Exit;
+                return;
+            }
+        }
+        // Handle input events
+        if input.update(&event) {
+            // Close events
+            if input.key_pressed(VirtualKeyCode::Escape) || input.quit() {
+                *control_flow = ControlFlow::Exit;
+                return;
+            }
 
-    //         if input.key_pressed(VirtualKeyCode::Space) {
-    //             // Update internal state and request a redraw
-    //             go = !go
-    //         }
-    //         if go {
-    //             sky.update();
-    //             println!("{}", sky.time);
-    //         }
-    //         window.request_redraw();
-    //     }
-    // });
+            // Resize the window
+            if let Some(size) = input.window_resized() {
+                pixels.resize_surface(size.width, size.height);
+            }
+
+            if input.key_pressed(VirtualKeyCode::Up) {
+                sky.update(1);
+                println!("{}", sky.time);
+            }
+
+            if input.key_held(VirtualKeyCode::Right) {
+                sky.update(1);
+            }
+
+            if input.key_pressed(VirtualKeyCode::Down) {
+                sky.rewind(1);
+                println!("{}", sky.time);
+            }
+
+            if input.key_held(VirtualKeyCode::Left) {
+                sky.rewind(1);
+            }
+
+            if input.key_pressed(VirtualKeyCode::Space) {
+                go = !go
+            }
+
+            if input.key_pressed(VirtualKeyCode::Tab) {
+                forward = !forward
+            }
+
+            if go {
+                if forward {
+                    sky.update(1);
+                } else {
+                    sky.rewind(1);
+                }
+            }
+            window.request_redraw();
+        }
+    });
 
     let answer1 = 0;
     let answer2 = 0;
