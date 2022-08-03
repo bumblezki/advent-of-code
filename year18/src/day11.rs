@@ -64,6 +64,15 @@ mod tests {
         )
     }
 
+    #[test]
+    fn check_day11_case02() {
+        full_test(
+            "42",
+            "(21, 61)",
+            "((232, 251), 12)"
+        )
+    }
+
     fn full_test(input_text: &str, part1_result: &str, part2_result: &str) {
         let input_lines = load_input(input_text);
         assert_eq!(
