@@ -30,23 +30,23 @@ pub fn day11(input_lines: &[Vec<String>]) -> (String, String) {
 
     let answer1 = max_indices;
 
-    // let mut max_power: i32 = MIN;
-    // let mut max_indices= (0 ,0);
-    // let mut max_subgrid_size = 0;
-    // for subgrid_size in 1..=POWER_GRID_SIZE {
-    //     for jj in 0..=POWER_GRID_SIZE-subgrid_size {
-    //         for ii in 0..=POWER_GRID_SIZE-subgrid_size {
-    //             let new_power = power_grid.slice((jj,ii),(subgrid_size,subgrid_size)).sum();
-    //             if new_power > max_power {
-    //                 max_power = new_power;
-    //                 max_indices = (ii+1, jj+1);
-    //                 max_subgrid_size = subgrid_size;
-    //             }
-    //         }
-    //     }
-    // }
+    let mut max_power: i32 = MIN;
+    let mut max_indices= (0 ,0);
+    let mut max_subgrid_size = 0;
+    for subgrid_size in 1..=POWER_GRID_SIZE {
+        for jj in 0..=POWER_GRID_SIZE-subgrid_size {
+            for ii in 0..=POWER_GRID_SIZE-subgrid_size {
+                let new_power = power_grid.slice((jj,ii),(subgrid_size,subgrid_size)).sum();
+                if new_power > max_power {
+                    max_power = new_power;
+                    max_indices = (ii+1, jj+1);
+                    max_subgrid_size = subgrid_size;
+                }
+            }
+        }
+    }
 
-    let answer2 = 0; // (max_indices, max_subgrid_size);
+    let answer2 = (max_indices, max_subgrid_size);
     (format!("{:?}", answer1), format!("{:?}", answer2))
 }
 
