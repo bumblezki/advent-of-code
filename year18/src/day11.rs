@@ -34,6 +34,7 @@ pub fn day11(input_lines: &[Vec<String>]) -> (String, String) {
     let mut max_indices= (0 ,0);
     let mut max_subgrid_size = 0;
     for subgrid_size in 1..=POWER_GRID_SIZE {
+        println!("Size: {}", subgrid_size);
         for jj in 0..=POWER_GRID_SIZE-subgrid_size {
             for ii in 0..=POWER_GRID_SIZE-subgrid_size {
                 let new_power = power_grid.slice((jj,ii),(subgrid_size,subgrid_size)).sum();
