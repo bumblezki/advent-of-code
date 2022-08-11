@@ -1,7 +1,43 @@
 // Potential improvements:
 //
+use std::str::{FromStr, ParseBoolError};
 
-pub fn day12(_input_lines: &[Vec<String>]) -> (String, String) {
+#[derive(Debug)]
+struct SpreadingRule {
+    slice: Vec<bool>,
+    output: bool,
+}
+
+impl FromStr for SpreadingRule {
+    type Err = ParseBoolError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let parts = s.split(" => ").collect::<Vec<&str>>();
+        Ok(SpreadingRule {
+            slice: parts[0].chars().map(|c| c == '#').collect(),
+            output: parts[1] == "#",
+        })
+    }
+}
+
+fn parse(input_lines: &[Vec<String>]) -> (Vec<bool>, Vec<SpreadingRule>) {
+    let gen_zero: Vec<bool> = input_lines[0][0]
+        .split("initial state: ")
+        .collect::<Vec<&str>>()[1]
+        .chars()
+        .map(|c| c == '#')
+        .collect();
+
+    let rules: Vec<SpreadingRule> = input_lines[0][1..]
+        .iter()
+        .map(|rule| rule.parse::<SpreadingRule>().unwrap())
+        .collect();
+    (gen_zero, rules)
+}
+
+pub fn day12(input_lines: &[Vec<String>]) -> (String, String) {
+    let (gen_zero, rules) = parse(input_lines);
+
     let answer1 = 0;
     let answer2 = 0;
     (format!("{}", answer1), format!("{}", answer2))
