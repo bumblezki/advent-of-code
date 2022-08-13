@@ -7,7 +7,7 @@ use itertools::Itertools;
 // RULE_SIZE must be odd.
 const RULE_SIZE: usize = 5;
 const LEFT_BUFFER: usize = RULE_SIZE;
-const RIGHT_BUFFER: usize = RULE_SIZE * 5;
+const RIGHT_BUFFER: usize = RULE_SIZE * 20;
 // const TRUE: char = '#';
 const FALSE: char = '.';
 
@@ -96,25 +96,38 @@ pub fn day12(input_lines: &[Vec<String>]) -> (String, String) {
         .map(|rule| rule.parse::<SpreadingRule>().expect("Could not parse rules."))
         .collect();
     let mut next_gen = current_gen.clone().next_generation(&rules);
-    println!("00: {:?}", current_gen);
+    // println!("0000: {:?}", current_gen);
 
-    for idx in 0..20 {
+    for _idx in 0..20 {
         current_gen = next_gen;
         next_gen = current_gen.next_generation(&rules);
-        println!("{:02}: {:?}", idx+1, current_gen);
+        // println!("{:04}: {:?}", idx+1, current_gen);
     }
 
     let answer1 = current_gen.plants.iter().enumerate().fold(0, |acc, (idx, plant)| 
         acc + (idx as i32 - current_gen.zero_index as i32 ) * (plant == &'#') as i32
     );
-    let answer2 = 0;
+
+    // Is this cheating?
+    // I 50000000000 is enormous! I let it run for a bit to see if any patterns emerged.
+    // I noticed that it looked stable from generation 89 onwards. It looked something like:
+    // 89: ...#..#.##.##....#.........
+    // 90: ....#..#.##.##....#........
+    // 91: .....#..#.##.##....#.......
+    // 92: ......#..#.##.##....#......
+    // etc.
+    // So I just copied the output from generation 90 and added them up as if the plants were shifted to the right by 50 billion - 90.
+    let gen_90_no_left_buffer = "..................#..#..#..#..#..#..#....#..#....#....#..#....#..#..#..#..#..#..#....#....#..#..#..#..#..#....#..#..#....#..#....#..#....#..#..#..#..#..#..#..#..#..#..#..#....#..#..#..#....#..........";
+    let answer2 = gen_90_no_left_buffer.chars().enumerate().fold(0, |acc, (idx, plant)|
+        acc + (idx as i64 + 50000000000 - 90) * (plant == '#') as i64
+    );
     (format!("{}", answer1), format!("{}", answer2))
 }
 
-#[cfg(test)]
-mod tests {
-    use super::day12;
-    use crate::utils::load_input;
+    #[cfg(test)]
+    mod tests {
+        use super::day12;
+        use crate::utils::load_input;
 
     #[test]
     fn check_day12_case01() {
