@@ -4,17 +4,22 @@ use std::str::{FromStr, ParseBoolError};
 
 use itertools::Itertools;
 
+// RULE_SIZE must be odd.
 const RULE_SIZE: usize = 5;
+const LEFT_BUFFER: usize = RULE_SIZE;
+const RIGHT_BUFFER: usize = RULE_SIZE * 5;
+// const TRUE: char = '#';
+const FALSE: char = '.';
 
 #[derive(Clone, Debug)]
 struct SpreadingRule {
-    slice: Vec<bool>,
-    output: bool,
+    chars: Vec<char>,
+    output: char,
 }
 
 impl SpreadingRule {
-    fn slice_to_output(&self, other_slice: &[bool]) -> Option<bool> {
-        if &self.slice == other_slice {
+    fn slice_to_output(&self, slice: &[char]) -> Option<char> {
+        if &self.chars == slice {            
             Some(self.output)
         } else {
             None
@@ -28,76 +33,80 @@ impl FromStr for SpreadingRule {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let parts = s.split(" => ").collect::<Vec<&str>>();
         Ok(SpreadingRule {
-            slice: parts[0].chars().map(|c| c == '#').collect_vec(),
-            output: parts[1] == "#",
+            chars: parts[0].chars().collect_vec(),
+            output: parts[1].chars().collect_vec()[0],
         })
     }
 }
 
+#[derive(Clone)]
 struct Generation {
-    plants: Vec<bool>,
+    plants: Vec<char>,
+    zero_index: usize,
 }
 
 impl FromStr for Generation {
     type Err = ParseBoolError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let plants: Vec<bool> = s
+        let mut plants = vec![FALSE; LEFT_BUFFER];
+        plants.extend(s
             .split("initial state: ")
             .collect::<Vec<&str>>()[1]
             .chars()
-            .map(|c| c == '#')
-            .collect();
-        Ok(Generation { plants })
+        );
+        plants.extend_from_slice(&[FALSE; RIGHT_BUFFER]);
+        Ok(Generation { plants, zero_index: LEFT_BUFFER })
     }
 }
 
 impl Generation {
-    fn next_generation(&self, rules: Vec<SpreadingRule>) -> Generation {
-        let next_gen_plants = self.plants
-            .clone()
-            .windows(RULE_SIZE)
-            .map(|window| {
-                let mut output: bool = window[2];
-                for rule in &rules {
-                    if let Some(value) = rule.slice_to_output(window) {
-                        output = value;
-                        break
+    fn next_generation(&self, rules: &[SpreadingRule]) -> Generation {
+        let mut next_gen_plants = vec![FALSE; RULE_SIZE / 2];
+        next_gen_plants.extend(
+            self.plants
+                .windows(RULE_SIZE)
+                .map(|window| {
+                    let mut output: char = FALSE;
+                    for rule in rules {
+                        if let Some(value) = rule.slice_to_output(window) {
+                            output = value;
+                            break
+                        }
                     }
-                }
-                output
-            }).collect_vec();
-        Generation { plants: next_gen_plants }
+                    output
+                })
+        );
+        next_gen_plants.extend_from_slice(&[FALSE; RULE_SIZE / 2]);
+        Generation { plants: next_gen_plants, zero_index: self.zero_index }
     }
 }
 
-impl std::fmt::Display for Generation {
+impl std::fmt::Debug for Generation {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let out = self.plants.iter().fold(String::new(), |s, &b| {
-            if b {
-                format!("{s}#")
-            } else {
-                format!("{s}.")
-            }
-        });
-        write!(f, "{}", out)
+        write!(f, "{}", String::from_iter(self.plants.clone()))
     }
 }
 
 
 pub fn day12(input_lines: &[Vec<String>]) -> (String, String) {
-    let gen_zero: Generation = input_lines[0][0].parse::<Generation>().expect("Could not parse first line of input into `Generation`.");
+    let mut current_gen: Generation = input_lines[0][0].parse::<Generation>().expect("Could not parse first line of input into `Generation`.");
     let rules: Vec<SpreadingRule> = input_lines[0][1..]
         .iter()
-        .map(|rule| rule.parse::<SpreadingRule>().unwrap())
+        .map(|rule| rule.parse::<SpreadingRule>().expect("Could not parse rules."))
         .collect();
-    
-    let gen_one = gen_zero.next_generation(rules);
+    let mut next_gen = current_gen.clone().next_generation(&rules);
+    println!("00: {:?}", current_gen);
 
-    println!("{}", gen_zero);
-    println!("{}", gen_one);
+    for idx in 0..20 {
+        current_gen = next_gen;
+        next_gen = current_gen.next_generation(&rules);
+        println!("{:02}: {:?}", idx+1, current_gen);
+    }
 
-    let answer1 = 0;
+    let answer1 = current_gen.plants.iter().enumerate().fold(0, |acc, (idx, plant)| 
+        acc + (idx as i32 - current_gen.zero_index as i32 ) * (plant == &'#') as i32
+    );
     let answer2 = 0;
     (format!("{}", answer1), format!("{}", answer2))
 }
@@ -126,7 +135,7 @@ mod tests {
 ###.. => #
 ###.# => #
 ####. => #",  // INPUT STRING
-            "1", // PART 1 RESULT
+            "325", // PART 1 RESULT
             "0", // PART 2 RESULT
         )
     }
