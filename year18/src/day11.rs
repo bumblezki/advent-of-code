@@ -1,6 +1,6 @@
 // Potential improvements:
 //
-use std::i32::MIN;
+use std::i32;
 use nalgebra::DMatrix;
 
 const POWER_GRID_SIZE: usize = 300;
@@ -15,7 +15,7 @@ pub fn day11(input_lines: &[Vec<String>]) -> (String, String) {
         |y, x| ((x as i32 + 11) * (y as i32 + 1) + serial_number) * (x as i32 + 11) / 100 % 10 - 5
     );
     
-    let mut max_power: i32 = MIN;
+    let mut max_power: i32 = i32::MIN;
     let mut max_indices= (0 ,0);
     let subgrid_size = 3;
     for jj in 0..=POWER_GRID_SIZE-subgrid_size {
@@ -30,11 +30,10 @@ pub fn day11(input_lines: &[Vec<String>]) -> (String, String) {
 
     let answer1 = max_indices;
 
-    let mut max_power: i32 = MIN;
+    let mut max_power: i32 = i32::MIN;
     let mut max_indices= (0 ,0);
     let mut max_subgrid_size = 0;
     for subgrid_size in 1..=POWER_GRID_SIZE {
-        println!("Size: {}", subgrid_size);
         for jj in 0..=POWER_GRID_SIZE-subgrid_size {
             for ii in 0..=POWER_GRID_SIZE-subgrid_size {
                 let new_power = power_grid.slice((jj,ii),(subgrid_size,subgrid_size)).sum();
