@@ -19,7 +19,7 @@ struct SpreadingRule {
 
 impl SpreadingRule {
     fn slice_to_output(&self, slice: &[char]) -> Option<char> {
-        if &self.chars == slice {            
+        if self.chars == slice {            
             Some(self.output)
         } else {
             None
@@ -95,7 +95,7 @@ pub fn day12(input_lines: &[Vec<String>]) -> (String, String) {
         .iter()
         .map(|rule| rule.parse::<SpreadingRule>().expect("Could not parse rules."))
         .collect();
-    let mut next_gen = current_gen.clone().next_generation(&rules);
+    let mut next_gen = current_gen.next_generation(&rules);
     // println!("0000: {:?}", current_gen);
 
     for _idx in 0..20 {
