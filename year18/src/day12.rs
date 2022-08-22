@@ -109,7 +109,7 @@ pub fn day12(input_lines: &[Vec<String>]) -> (String, String) {
     );
 
     // Is this cheating?
-    // I 50000000000 is enormous! I let it run for a bit to see if any patterns emerged.
+    // 50000000000 is enormous! I let it run for a bit to see if any patterns emerged.
     // I noticed that it looked stable from generation 89 onwards. It looked something like:
     // 89: ...#..#.##.##....#.........
     // 90: ....#..#.##.##....#........
