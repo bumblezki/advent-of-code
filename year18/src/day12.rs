@@ -109,7 +109,7 @@ pub fn day12(input_lines: &[Vec<String>]) -> (String, String) {
     );
 
     // Is this cheating?
-    // 50000000000 is enormous! I let it run for a bit to see if any patterns emerged.
+    // 50_000_000_000 is enormous! I let it run for a bit to see if any patterns emerged.
     // I noticed that it looked stable from generation 89 onwards. It looked something like:
     // 89: ...#..#.##.##....#.........
     // 90: ....#..#.##.##....#........
@@ -119,7 +119,7 @@ pub fn day12(input_lines: &[Vec<String>]) -> (String, String) {
     // So I just copied the output from generation 90 and added them up as if the plants were shifted to the right by 50 billion - 90.
     let gen_90_no_left_buffer = "..................#..#..#..#..#..#..#....#..#....#....#..#....#..#..#..#..#..#..#....#....#..#..#..#..#..#....#..#..#....#..#....#..#....#..#..#..#..#..#..#..#..#..#..#..#....#..#..#..#....#..........";
     let answer2 = gen_90_no_left_buffer.chars().enumerate().fold(0, |acc, (idx, plant)|
-        acc + (idx as i64 + 50000000000 - 90) * (plant == '#') as i64
+        acc + (idx as i64 + 50_000_000_000 - 90) * (plant == '#') as i64
     );
     (format!("{}", answer1), format!("{}", answer2))
 }
