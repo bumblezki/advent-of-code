@@ -91,7 +91,7 @@ impl std::fmt::Debug for Generation {
 
 pub fn day12(input_lines: &[Vec<String>]) -> (String, String) {
     let mut current_gen: Generation = input_lines[0][0].parse::<Generation>().expect("Could not parse first line of input into `Generation`.");
-    let rules: Vec<SpreadingRule> = input_lines[0][1..]
+    let rules: Vec<SpreadingRule> = input_lines[1]
         .iter()
         .map(|rule| rule.parse::<SpreadingRule>().expect("Could not parse rules."))
         .collect();
