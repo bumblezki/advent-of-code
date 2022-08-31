@@ -1068,6 +1068,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f1382d1f0a252c4bf97dc20d979a2fdd05b024acd7c2ed0f7595d7817666a157"
 
 [[package]]
+name = "rotate-enum"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "008b94d7480f5e4ed6799874f744631cf62dc3e5133f48aeb18a1e5c1ba01988"
+dependencies = [
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "rustc-hash"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1196,6 +1206,7 @@ dependencies = [
  "pixels",
  "rand",
  "regex",
+ "rotate-enum",
  "winit",
  "winit_input_helper",
 ]
