@@ -1,106 +1,89 @@
-use nalgebra::{Vector2, Matrix2, DMatrix};
+use itertools::Itertools;
+use nalgebra::{Vector2, Matrix2, DMatrix, RowDVector};
 use rotate_enum::RotateEnum;
 
-const UP: Vector2<i32> = Vector2::new(0, 1);
-const DOWN: Vector2<i32> = Vector2::new(0, -1);
-const LEFT: Vector2<i32> = Vector2::new(-1, 0);
-const RIGHT: Vector2<i32> = Vector2::new(1, 0);
+// const UP: Vector2<i32> = Vector2::new(0, 1);
+// const DOWN: Vector2<i32> = Vector2::new(0, -1);
+// const LEFT: Vector2<i32> = Vector2::new(-1, 0);
+// const RIGHT: Vector2<i32> = Vector2::new(1, 0);
 const TURN_LEFT: Matrix2<i32> = Matrix2::new(0, 1, -1, 0);
 const GO_STRAIGHT: Matrix2<i32> = Matrix2::new(1, 0, 0, 1);
 const TURN_RIGHT: Matrix2<i32> = Matrix2::new(0, -1, 1, 0);
 
 #[derive(Debug, Clone, Copy, RotateEnum)]
-enum IntersectionBehaviour {
+enum IntersectionBehavior {
     TurnLeft,
     GoStraight,
     TurnRight,
 }
 
-impl Into<Matrix2<i32>> for IntersectionBehaviour {
+impl Into<Matrix2<i32>> for IntersectionBehavior {
     fn into(self) -> Matrix2<i32> {
         match self {
-            IntersectionBehaviour::TurnLeft => TURN_LEFT,
-            IntersectionBehaviour::GoStraight => GO_STRAIGHT,
-            IntersectionBehaviour::TurnRight => TURN_RIGHT,
-        }
-    }
-}
-
-#[derive(Debug, Clone, Copy)]
-enum Velocity {
-    Up,
-    Down,
-    Left,
-    Right,
-}
-
-impl Into<Vector2<i32>> for Velocity {
-    fn into(self) -> Vector2<i32> {
-        match self {
-            Velocity::Up => UP,
-            Velocity::Down => DOWN,
-            Velocity::Left => LEFT,
-            Velocity::Right => RIGHT,
-        }
-    }
-}
-
-impl From<Vector2<i32>> for Velocity {
-    fn from(value: Vector2<i32>) -> Self {
-        match value {
-            UP => Velocity::Up,
-            DOWN => Velocity::Down,
-            LEFT => Velocity::Left,
-            RIGHT => Velocity::Right,
-            _ => panic!(),
+            IntersectionBehavior::TurnLeft => TURN_LEFT,
+            IntersectionBehavior::GoStraight => GO_STRAIGHT,
+            IntersectionBehavior::TurnRight => TURN_RIGHT,
         }
     }
 }
 
 struct Cart {
     position: Vector2<i32>,
-    velocity: Velocity,
-    intersection_behaviour: IntersectionBehaviour,
+    velocity: Vector2<i32>,
+    intersection_behavior: IntersectionBehavior,
 }
 
 impl Cart {
-    fn go(&mut self) {
-        self.position += Into::<Vector2<i32>>::into(self.velocity);
+    fn go(&mut self, track_map: DMatrix<char>) {
+        self.position += self.velocity;
+        // let track_piece: char = track_map[Into::<(i32, i32)>::into(self.position)]; 
     }
 
-    fn handle_intersection(&mut self) {
-        self.velocity = Velocity::from(Into::<Matrix2<i32>>::into(self.intersection_behaviour) * Into::<Vector2<i32>>::into(self.velocity));
-        self.intersection_behaviour = self.intersection_behaviour.next();
+    fn handle_track_piece(&mut self, track_piece: char) {
+        let turning_matrix = match track_piece {
+            '+' => self.get_update_intersection_behavior(),
+            '\\' => {
+                match (self.velocity.y.abs() == 1, self.velocity.x.abs() == 0) {
+                    (true, false) => TURN_LEFT,
+                    (false, true) => TURN_RIGHT,
+                    _ => panic!()
+                }
+            },
+            '/' => {
+                match (self.velocity.x.abs() == 1, self.velocity.y.abs() == 0) {
+                    (true, false) => TURN_LEFT,
+                    (false, true) => TURN_RIGHT,
+                    _ => panic!()
+                }
+            },
+            '-' | '|' => {
+                GO_STRAIGHT
+            }
+            _ => {
+                panic!()
+            }
+        };
+        self.velocity = turning_matrix * self.velocity;
     }
 
-    // fn handle_turn()
-
-        
-    //         '\\' => {
-    //             match self.velocity {
-    //                 Velocity::Up | Velocity::Down => TURN_LEFT,
-    //                 Velocity::Right | Velocity::Left => TURN_RIGHT,
-    //             }
-    //         },
-    //         '/' => {
-    //             match self.velocity {
-    //                 Velocity::Up | Velocity::Down => TURN_RIGHT,
-    //                 Velocity::Left | Velocity::Right => TURN_LEFT,
-    //             }
-    //         },
-    //         '-' | '|' => {
-    //             GO_STRAIGHT
-    //         }
-    //         _ => {
-    //             panic!()
-    //         }
-    //     }
-    // 
+    fn get_update_intersection_behavior(&mut self) -> Matrix2<i32> {
+        self.intersection_behavior = self.intersection_behavior.next();
+        Into::<Matrix2<i32>>::into(self.intersection_behavior)
+    }
 }
 
 
 
-pub fn day13(_input_lines: &[Vec<String>]) -> (String, String) {
+pub fn day13(input_lines: &[Vec<String>]) -> (String, String) {
+    
+    let mut track_map: DMatrix<char> = DMatrix::from_rows(
+        &input_lines[0]
+            .iter()
+            .map(|line| RowDVector::from_vec(line.chars().collect_vec()))
+            .collect_vec()
+    );
+    
+
     let answer1 = 0;
     let answer2 = 0;
     (format!("{}", answer1), format!("{}", answer2))
