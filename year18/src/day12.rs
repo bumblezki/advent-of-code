@@ -8,8 +8,8 @@ use itertools::Itertools;
 const RULE_SIZE: usize = 5;
 const LEFT_BUFFER: usize = RULE_SIZE;
 const RIGHT_BUFFER: usize = RULE_SIZE * 20;
-// const TRUE: char = '#';
-const FALSE: char = '.';
+const PLANT: char = '#';
+const NO_PLANT: char = '.';
 
 #[derive(Clone, Debug)]
 struct SpreadingRule {
@@ -49,25 +49,25 @@ impl FromStr for Generation {
     type Err = ParseBoolError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let mut plants = vec![FALSE; LEFT_BUFFER];
+        let mut plants = vec![NO_PLANT; LEFT_BUFFER];
         plants.extend(s
             .split("initial state: ")
             .collect::<Vec<&str>>()[1]
             .chars()
         );
-        plants.extend_from_slice(&[FALSE; RIGHT_BUFFER]);
+        plants.extend_from_slice(&[NO_PLANT; RIGHT_BUFFER]);
         Ok(Generation { plants, zero_index: LEFT_BUFFER })
     }
 }
 
 impl Generation {
     fn next_generation(&self, rules: &[SpreadingRule]) -> Generation {
-        let mut next_gen_plants = vec![FALSE; RULE_SIZE / 2];
+        let mut next_gen_plants = vec![NO_PLANT; RULE_SIZE / 2];
         next_gen_plants.extend(
             self.plants
                 .windows(RULE_SIZE)
                 .map(|window| {
-                    let mut output: char = FALSE;
+                    let mut output: char = NO_PLANT;
                     for rule in rules {
                         if let Some(value) = rule.slice_to_output(window) {
                             output = value;
@@ -77,7 +77,7 @@ impl Generation {
                     output
                 })
         );
-        next_gen_plants.extend_from_slice(&[FALSE; RULE_SIZE / 2]);
+        next_gen_plants.extend_from_slice(&[NO_PLANT; RULE_SIZE / 2]);
         Generation { plants: next_gen_plants, zero_index: self.zero_index }
     }
 }
@@ -105,7 +105,7 @@ pub fn day12(input_lines: &[Vec<String>]) -> (String, String) {
     }
 
     let answer1 = current_gen.plants.iter().enumerate().fold(0, |acc, (idx, plant)| 
-        acc + (idx as i32 - current_gen.zero_index as i32 ) * (plant == &'#') as i32
+        acc + (idx as i32 - current_gen.zero_index as i32 ) * (plant == &PLANT) as i32
     );
 
     // Is this cheating?
