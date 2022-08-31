@@ -10,7 +10,7 @@ const TURN_LEFT: Matrix2<i32> = Matrix2::new(0, 1, -1, 0);
 const GO_STRAIGHT: Matrix2<i32> = Matrix2::new(1, 0, 0, 1);
 const TURN_RIGHT: Matrix2<i32> = Matrix2::new(0, -1, 1, 0);
 
-#[derive(Debug, Clone, Copy, RotateEnum)]
+#[derive(Clone, Copy, RotateEnum)]
 enum IntersectionBehavior {
     TurnLeft,
     GoStraight,
