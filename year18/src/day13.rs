@@ -2,10 +2,10 @@ use itertools::Itertools;
 use nalgebra::{Vector2, Matrix2, DMatrix, RowDVector};
 use rotate_enum::RotateEnum;
 
-const UP: Vector2<i32> = Vector2::new(0, 1);
-const DOWN: Vector2<i32> = Vector2::new(0, -1);
-const LEFT: Vector2<i32> = Vector2::new(-1, 0);
-const RIGHT: Vector2<i32> = Vector2::new(1, 0);
+const UP: Vector2<i32> = Vector2::new(-1, 0);
+const DOWN: Vector2<i32> = Vector2::new(1, 0);
+const LEFT: Vector2<i32> = Vector2::new(0, -1);
+const RIGHT: Vector2<i32> = Vector2::new(0, 1);
 const TURN_LEFT: Matrix2<i32> = Matrix2::new(0, 1, -1, 0);
 const GO_STRAIGHT: Matrix2<i32> = Matrix2::new(1, 0, 0, 1);
 const TURN_RIGHT: Matrix2<i32> = Matrix2::new(0, -1, 1, 0);
@@ -66,9 +66,9 @@ impl Cart {
         }
     }
 
-    fn go(&mut self, track_map: DMatrix<char>) {
+    fn go(&mut self, track_map: &DMatrix<char>) {
         self.position += self.velocity;
-        let track_piece: char = track_map[(self.position.y as usize, self.position.x as usize)];
+        let track_piece: char = track_map[(self.position.x as usize, self.position.y as usize)];
         self.handle_track_piece(track_piece);
     }
 
@@ -76,24 +76,25 @@ impl Cart {
         let turning_matrix = match track_piece {
             '+' => self.get_update_intersection_behavior(),
             '\\' => {
-                match (self.velocity.y.abs() == 1, self.velocity.x.abs() == 0) {
-                    (true, false) => TURN_LEFT,
-                    (false, true) => TURN_RIGHT,
-                    _ => panic!()
+                // Going left/right (true) or up/down (false)?
+                match self.velocity.y.abs() == 1 {
+                    true => TURN_RIGHT,
+                    false => TURN_LEFT,
                 }
             },
             '/' => {
-                match (self.velocity.x.abs() == 1, self.velocity.y.abs() == 0) {
-                    (true, false) => TURN_LEFT,
-                    (false, true) => TURN_RIGHT,
-                    _ => panic!()
+                // Going left/right (true) or up/down (false)?
+                match self.velocity.y.abs() == 1 {
+                    true => TURN_LEFT,
+                    false => TURN_RIGHT,
                 }
             },
             '-' | '|' => {
                 GO_STRAIGHT
             }
             _ => {
-                panic!()
+                GO_STRAIGHT
+                // panic!("{}", track_piece)
             }
         };
         self.velocity = turning_matrix * self.velocity;
@@ -123,24 +124,47 @@ pub fn day13(input_lines: &[Vec<String>]) -> (String, String) {
     let track_map = track_map.insert_row(0, ' ');
     let mut track_map = track_map.insert_column(0, ' ');
 
-    // Find all the carts
-    let cart_surrounding_size = 3;
+    // Find all the carts and replace their starting location on the map with either '|' or '-'.
+    // This assumes that no carts start at intersections or corners.
+    // Take account of the padding when instantiating the carts as we'll soon remove this.
     let mut carts: Vec<Cart> = Vec::new();
-    for jj in 0..track_map.nrows()-cart_surrounding_size {
-        for ii in 0..track_map.ncols()-cart_surrounding_size {
-            let slice = track_map.slice_mut((jj, ii), (cart_surrounding_size, cart_surrounding_size));
-            match slice[(1, 1)] {
-                '>' => carts.push(Cart::new(ii as i32, jj as i32, RIGHT)),
-                '<' => carts.push(Cart::new(ii as i32, jj as i32, LEFT)),
-                '^' => carts.push(Cart::new(ii as i32, jj as i32, UP)),
-                'v' => carts.push(Cart::new(ii as i32, jj as i32, DOWN)),
+    for jj in 0..track_map.nrows() {
+        for ii in 0..track_map.ncols() {
+            match track_map[(ii, jj)] {
+                '>' => {
+                    carts.push(Cart::new(ii as i32 - 1, jj as i32 - 1, RIGHT));
+                    track_map[(ii, jj)] = '-';
+                },
+                '<' =>  {
+                    carts.push(Cart::new(ii as i32 - 1, jj as i32 - 1, LEFT));
+                    track_map[(ii, jj)] = '-';
+                },
+                '^' =>  {
+                    carts.push(Cart::new(ii as i32 - 1, jj as i32 - 1, UP));
+                    track_map[(ii, jj)] = '|';
+                },
+                'v' =>  {
+                    carts.push(Cart::new(ii as i32 - 1, jj as i32 - 1, DOWN));
+                    track_map[(ii, jj)] = '|';
+                },
                 _ => continue,
             }
         }
     }
+    let ncols = track_map.ncols();
+    let nrows = track_map.nrows();
+    let track_map = track_map.remove_columns_at(&[0, ncols]);
+    let track_map = track_map.remove_rows_at(&[0, nrows]);
 
-    for cart in carts {
-        println!("{}", cart);
+    loop {
+        let mut drawn_track_map = track_map.clone();
+        for cart in &carts {
+            drawn_track_map[(cart.position.x as usize, cart.position.y as usize)] = 'O';
+        }
+        println!("{}", drawn_track_map);
+        for cart in carts.iter_mut() {
+            cart.go(&track_map)
+        }
     }
 
     
