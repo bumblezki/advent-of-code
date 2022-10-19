@@ -9,3 +9,4 @@ publish = ["metaswitch"]
 [dependencies]
 regex = "1.5.4"
 counter = "0.5.2"
+once_cell = "1.15.0"
