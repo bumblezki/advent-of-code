@@ -1,9 +1,25 @@
-// Potential improvements:
-//
+use std::collections::VecDeque;
 
-pub fn day03(_input_lines: &[Vec<String>]) -> (String, String) {
-    let answer1 = 0;
-    let answer2 = 0;
+fn count_trees_for_slope(down: usize, across: usize, lines: &[String]) -> u64 {
+    lines
+        .iter()
+        .step_by(down)
+        .enumerate()
+        .fold(0, |mut tree_count, (counter, line)| {
+            let dq = line.chars().collect::<VecDeque<char>>();
+            if dq.iter().cycle().nth(across * counter).unwrap() == &'#' {
+                tree_count += 1;
+            }
+            tree_count
+        })
+}
+
+pub fn day03(input_lines: &[Vec<String>]) -> (String, String) {
+    let answer1 = count_trees_for_slope(1, 3, &input_lines[0]);
+    let answer2: u64 = vec![(1, 1), (1, 3), (1, 5), (1, 7), (2, 1)]
+        .iter()
+        .map(|&(down, across)| count_trees_for_slope(down, across, &input_lines[0]))
+        .product();
     (format!("{}", answer1), format!("{}", answer2))
 }
 
@@ -15,9 +31,19 @@ mod tests {
     #[test]
     fn check_day03_case01() {
         full_test(
-            "",  // INPUT STRING
-            "0", // PART 1 RESULT
-            "0", // PART 2 RESULT
+            "..##.......
+#...#...#..
+.#....#..#.
+..#.#...#.#
+.#...##..#.
+..#.##.....
+.#.#.#....#
+.#........#
+#.##...#...
+#...##....#
+.#..#...#.#",  // INPUT STRING
+            "7", // PART 1 RESULT
+            "336", // PART 2 RESULT
         )
     }
 
