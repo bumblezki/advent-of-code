@@ -1,13 +1,10 @@
-use std::collections::VecDeque;
-
 fn count_trees_for_slope(down: usize, across: usize, lines: &[String]) -> u64 {
     lines
         .iter()
         .step_by(down)
         .enumerate()
         .fold(0, |mut tree_count, (counter, line)| {
-            let dq = line.chars().collect::<VecDeque<char>>();
-            if dq.iter().cycle().nth(across * counter).unwrap() == &'#' {
+            if line.chars().cycle().nth(across * counter).unwrap() == '#' {
                 tree_count += 1;
             }
             tree_count
