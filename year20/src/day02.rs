@@ -92,6 +92,9 @@ mod tests {
 
     fn full_test(input_text: &str, part1_result: &str, part2_result: &str) {
         let input_lines = load_input(input_text);
-        assert_eq!(day02(&input_lines), (part1_result.to_string(), part2_result.to_string()));
+        assert_eq!(
+            day02(&input_lines),
+            (part1_result.to_string(), part2_result.to_string())
+        );
     }
 }
