@@ -38,8 +38,8 @@ mod tests {
 .#........#
 #.##...#...
 #...##....#
-.#..#...#.#",  // INPUT STRING
-            "7", // PART 1 RESULT
+.#..#...#.#", // INPUT STRING
+            "7",   // PART 1 RESULT
             "336", // PART 2 RESULT
         )
     }
