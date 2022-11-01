@@ -1,21 +1,20 @@
-fn count_trees_for_slope(down: usize, across: usize, lines: &[String]) -> u64 {
+use std::num::TryFromIntError;
+
+fn count_trees_for_slope(v: (usize, usize), lines: &[String]) -> Result<u64, TryFromIntError> {
     lines
         .iter()
-        .step_by(down)
+        .step_by(v.1)
         .enumerate()
-        .fold(0, |mut tree_count, (counter, line)| {
-            if line.chars().cycle().nth(across * counter).unwrap() == '#' {
-                tree_count += 1;
-            }
-            tree_count
-        })
+        .filter(|(counter, line)| line.chars().cycle().nth(v.0 * counter).unwrap() == '#')
+        .count()
+        .try_into()
 }
 
 pub fn day03(input_lines: &[Vec<String>]) -> (String, String) {
-    let answer1 = count_trees_for_slope(1, 3, &input_lines[0]);
-    let answer2: u64 = vec![(1, 1), (1, 3), (1, 5), (1, 7), (2, 1)]
+    let answer1 = count_trees_for_slope((3, 1), &input_lines[0]).unwrap();
+    let answer2: u64 = vec![(1, 1), (3, 1), (5, 1), (7, 1), (1, 2)]
         .iter()
-        .map(|&(down, across)| count_trees_for_slope(down, across, &input_lines[0]))
+        .map(|&v| count_trees_for_slope(v, &input_lines[0]).unwrap())
         .product();
     (format!("{}", answer1), format!("{}", answer2))
 }
