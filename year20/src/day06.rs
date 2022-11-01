@@ -3,7 +3,44 @@
 use std::collections::HashSet;
 
 pub fn day06(input_lines: &[Vec<String>]) -> (String, String) {
-    let group_answers: Vec<Vec<HashSet<char>>> = input_lines
+    // Collect the answers into a list of lists of sets of characters. E.g.,
+    // 
+    // abc
+    //
+    // a
+    // b
+    // c
+    //
+    // ab
+    // ac
+    //
+    // a
+    // a
+    // a
+    // a
+    //
+    // b
+    //
+    // goes to
+    //
+    // [
+    //     [
+    //         {'a', 'b', 'c'}
+    //     ],
+    //     [
+    //         {'a'}, {'b'}, {'c'}
+    //     ],
+    //     [
+    //         {'a', 'b'}, {'a', 'c'}
+    //     ],
+    //     [
+    //         {'a'}, {'a'}, {'a'}, {'a'}
+    //     ],
+    //     [
+    //         {'b'}
+    //     ]
+    // ]
+    let groups: Vec<Vec<HashSet<char>>> = input_lines
         .iter()
         .map(|group_lines| {
             group_lines
@@ -12,14 +49,27 @@ pub fn day06(input_lines: &[Vec<String>]) -> (String, String) {
                 .collect()
         })
         .collect();
-    
-    let answer1: usize = group_answers
+
+    // Then for each group we find the size of the union of all the sets in the group and sum them...
+    let answer1: usize = groups
         .iter()
-        .map(|group| 1)
+        .map(|group| {
+            group.iter().fold(HashSet::new(), |acc, set| {
+                acc.union(&set).copied().collect::<HashSet<_>>()
+            })
+        })
+        .map(|set| set.len())
         .sum();
-    let answer2: usize = group_answers
-        .iter()
-        .map(|group| 1)
+    // Then do the same for the intersection...
+    let answer2: usize = groups
+        .into_iter()
+        .map(|group| {
+            group
+                .into_iter()
+                .reduce(|left, right| left.intersection(&right).copied().collect::<HashSet<_>>())
+                .unwrap_or(HashSet::new())
+        })
+        .map(|set| set.len())
         .sum();
     (format!("{}", answer1), format!("{}", answer2))
 }
@@ -32,9 +82,23 @@ mod tests {
     #[test]
     fn check_day06_case01() {
         full_test(
-            "",  // INPUT STRING
-            "0", // PART 1 RESULT
-            "0", // PART 2 RESULT
+            "abc
+
+a
+b
+c
+
+ab
+ac
+
+a
+a
+a
+a
+
+b",  // INPUT STRING
+            "11", // PART 1 RESULT
+            "6", // PART 2 RESULT
         )
     }
 
