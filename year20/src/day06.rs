@@ -1,9 +1,26 @@
 // Potential improvements:
 //
+use std::collections::HashSet;
 
-pub fn day06(_input_lines: &[Vec<String>]) -> (String, String) {
-    let answer1 = 0;
-    let answer2 = 0;
+pub fn day06(input_lines: &[Vec<String>]) -> (String, String) {
+    let group_answers: Vec<Vec<HashSet<char>>> = input_lines
+        .iter()
+        .map(|group_lines| {
+            group_lines
+                .iter()
+                .map(|line| HashSet::from_iter(line.chars()))
+                .collect()
+        })
+        .collect();
+    
+    let answer1: usize = group_answers
+        .iter()
+        .map(|group| 1)
+        .sum();
+    let answer2: usize = group_answers
+        .iter()
+        .map(|group| 1)
+        .sum();
     (format!("{}", answer1), format!("{}", answer2))
 }
 
