@@ -1,9 +1,21 @@
-// Potential improvements:
-//
+use std::num::TryFromIntError;
 
-pub fn day03(_input_lines: &[Vec<String>]) -> (String, String) {
-    let answer1 = 0;
-    let answer2 = 0;
+fn count_trees_for_slope(v: (usize, usize), lines: &[String]) -> Result<u64, TryFromIntError> {
+    lines
+        .iter()
+        .step_by(v.1)
+        .enumerate()
+        .filter(|(counter, line)| line.chars().cycle().nth(v.0 * counter).unwrap() == '#')
+        .count()
+        .try_into()
+}
+
+pub fn day03(input_lines: &[Vec<String>]) -> (String, String) {
+    let answer1 = count_trees_for_slope((3, 1), &input_lines[0]).unwrap();
+    let answer2: u64 = vec![(1, 1), (3, 1), (5, 1), (7, 1), (1, 2)]
+        .iter()
+        .map(|&v| count_trees_for_slope(v, &input_lines[0]).unwrap())
+        .product();
     (format!("{}", answer1), format!("{}", answer2))
 }
 
@@ -15,9 +27,19 @@ mod tests {
     #[test]
     fn check_day03_case01() {
         full_test(
-            "",  // INPUT STRING
-            "0", // PART 1 RESULT
-            "0", // PART 2 RESULT
+            "..##.......
+#...#...#..
+.#....#..#.
+..#.#...#.#
+.#...##..#.
+..#.##.....
+.#.#.#....#
+.#........#
+#.##...#...
+#...##....#
+.#..#...#.#", // INPUT STRING
+            "7",   // PART 1 RESULT
+            "336", // PART 2 RESULT
         )
     }
 
