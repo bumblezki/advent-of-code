@@ -20,9 +20,22 @@ mod tests {
     #[test]
     fn check_day01_case01() {
         full_test(
-            "",  // INPUT STRING
-            "0", // PART 1 RESULT
-            "0", // PART 2 RESULT
+            "1000
+2000
+3000
+
+4000
+
+5000
+6000
+
+7000
+8000
+9000
+
+10000", // INPUT STRING
+            "24000", // PART 1 RESULT
+            "45000", // PART 2 RESULT
         )
     }
 
