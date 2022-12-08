@@ -8,3 +8,5 @@ publish = ["metaswitch"]
 
 [dependencies]
 rotate-enum = "0.1.2"
+once_cell = "1.15.0"
+regex = "1.5.4"
