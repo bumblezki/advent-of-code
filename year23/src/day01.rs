@@ -1,8 +1,8 @@
-use std::collections::BTreeMap;
+use std::collections::HashMap;
 
 fn calibration_value(
     line: &String, 
-    digit_maps: Option<(&BTreeMap<&str, &str>, &BTreeMap<&str, &str>)>
+    digit_maps: Option<(&HashMap<&str, &str>, &HashMap<&str, &str>)>
 ) -> u32 {
     let mut mut_line = line.clone();
     if digit_maps.is_some() {
@@ -23,7 +23,7 @@ pub fn day01(input_lines: &[Vec<String>]) -> (String, String) {
     let answer1 = input_lines[0].iter().fold(0, |acc, line| {
         acc + calibration_value(line, None)
     });
-    let special_case_digit_map = BTreeMap::from([
+    let special_case_digit_map = HashMap::from([
         ("oneight", "18"),
         ("twone", "21"),
         ("threeight", "38"),
@@ -33,7 +33,7 @@ pub fn day01(input_lines: &[Vec<String>]) -> (String, String) {
         ("eighthree", "83"),
         ("nineight", "98"),
     ]);
-    let digit_map = BTreeMap::from([
+    let digit_map = HashMap::from([
         ("one", "1"),
         ("two", "2"),
         ("three", "3"),
