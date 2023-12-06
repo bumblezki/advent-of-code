@@ -1,50 +1,48 @@
 // Potential improvements:
 //
-
-use std::collections::{HashMap, HashSet};
-use uuid::Uuid;
-
-#[derive(Copy, Clone, Debug, Eq, Hash, PartialEq)]
-struct PartNumber { uuid: Uuid, number: u32 }
-
-impl PartNumber {
-    fn new(number: u32) -> Self {
-        Self { uuid: Uuid::new_v4(), number }
+fn clamp<T: PartialOrd>(input: T, min: T, max: T) -> T {
+    if input < min {
+        min
+    } else if input > max {
+        max
+    } else {
+        input
     }
 }
 
 pub fn day03(input_lines: &[Vec<String>]) -> (String, String) {
 
-    let mut part_number_map: HashMap<(usize, usize), HashSet<PartNumber>> = HashMap::new();
-    let mut symbol_coords: Vec<(usize, usize)> = Vec::new();
+    let num_rows = input_lines[0].len();
+    let num_cols = input_lines[0][0].len();
 
-    let mut current_num_str = Vec::new();
+    let mut total: u32 = 0;
 
     for (ii, row) in input_lines[0].iter().enumerate() {
+
+        let mut current_num_str = Vec::new();
         let mut jj_chars = row.chars().enumerate();
         let mut start_col: usize = 0;
-        while let Some((jj, c)) = jj_chars.next() {
+        while let Some((jj, cc)) = jj_chars.next() {
             
-            if c.is_digit(10) {
+            if cc.is_digit(10) {
                 if current_num_str.is_empty() {
                     start_col = jj;
                 }
-                current_num_str.push(c);
+                current_num_str.push(cc);
             } else {
-
-                if c != '.' {
-                    symbol_coords.push((ii, jj));
-                }
-
                 if !current_num_str.is_empty() {
                     let current_num = current_num_str.iter().collect::<String>().parse::<u32>().unwrap();
                     current_num_str.clear();
 
-                    for yy in ii.saturating_sub(1)..=ii+1 {
+                    'search: for yy in ii.saturating_sub(1)..=ii+1 {
                         for xx in start_col.saturating_sub(1)..=jj {
-                            part_number_map.entry((yy, xx))
-                                .or_insert(HashSet::new())
-                                .insert(PartNumber::new(current_num));
+                            println!("input_lines: {:?}", input_lines[clamp(yy, 0, num_rows-1)][clamp(xx, 0, num_cols-1)]);
+                            let neighbour = input_lines[clamp(yy, 0, num_rows-1)][clamp(xx, 0, num_cols-1)].chars().next().unwrap();
+                            if !neighbour.is_digit(10) && neighbour != '.' {
+                                total += current_num;
+                                println!("{}: {}", current_num, neighbour);
+                                break 'search;
+                            }
                         }
                     }
                 }
@@ -52,23 +50,8 @@ pub fn day03(input_lines: &[Vec<String>]) -> (String, String) {
         }
     }
 
-    let mut part_numbers: HashSet<&PartNumber> = HashSet::new();
-    for (ii, jj) in &symbol_coords {
-        if let Some(pns) = part_number_map.get(&(*ii, *jj)) {
-            for pn in pns {
-                part_numbers.insert(pn);
-            }
-        }
-    }
-    // println!("part_numbers: {:?}", part_numbers.iter().map(|pns| pns.iter().map(|pn| pn.number).collect::<Vec<u32>>()).collect::<Vec<Vec<u32>>>());
-    // println!("symbol_coords: {:?}", symbol_coords);
-    // for (coord, pn) in part_number_map.iter() {
-    //     if pn.number == 755 {println!("{:?}: {}", coord, pn.number)}
-        
-    // }
-
-    let answer1: u32 = part_numbers.iter().map(|pn| pn.number).sum();
-    let answer2 = 0;
+    let answer1: u32 = total;
+    let answer2 = 10;
     (format!("{}", answer1), format!("{}", answer2))
 }
 
