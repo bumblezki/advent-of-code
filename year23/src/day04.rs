@@ -56,14 +56,6 @@ impl ScratchCard {
 }
 
 fn num_copies(sum: &mut u32, copy_map: &BTreeMap<u32, HashSet<u32>>, id: u32) {
-    // copy_map = {
-    //     1: {2, 3, 4, 5},
-    //     2: {3, 4}
-    //     3: {4, 5}
-    //     4: {5}
-    //     5: {}
-    //     6: {}
-    // }
     let copies = copy_map.get(&id).unwrap(); 
     if !copies.is_empty() {
         copies.iter().for_each(|c| {
