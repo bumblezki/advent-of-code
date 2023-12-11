@@ -1,6 +1,6 @@
 // Potential improvements:
 //
-use std::collections::HashSet;
+use std::collections::{BTreeMap, HashSet};
 use std::str::FromStr;
 use anyhow::Result;
 
@@ -26,6 +26,7 @@ impl FromStr for ScratchCard {
         let mut card_numbers = parts.next().unwrap().split(" | ");
         let card_winners = card_numbers.next().unwrap().split(" ").filter(|s| s != &"");
         let card_numbers = card_numbers.next().unwrap().split(" ").filter(|s| s != &"");
+
         for winner in card_winners {
             winners.insert(winner.parse::<u32>().unwrap());
         }
@@ -38,31 +39,56 @@ impl FromStr for ScratchCard {
 }
 
 impl ScratchCard {
+    fn win_count(&self) -> u32 {
+        self.numbers.iter().filter(|n| self.winners.contains(n)).count() as u32
+    }
+
     fn score(&self) -> Option<u32> {
-        let win_count = self.numbers.iter().filter(|n| self.winners.contains(n)).count();
-        if win_count > 0 {
-            let score = u32::pow(2, win_count as u32 - 1) ;
-            println!("id: {}, win_count: {}, score: {}", self.id, win_count, score);
-            Some(score)
-        } else {
-            None
+        match self.win_count() {
+            0 => None,
+            wc => Some(u32::pow(2, wc as u32 - 1)),
         }
     }
 
-    fn copies(&self) -> Vec<ScratchCard> {
-        let mut copies = Vec::new();
-        for _ in 0..self.numbers.len() {
-            copies.push(Self { id: self.id, winners: self.winners.clone(), numbers: self.numbers.clone() });
-        }
-        copies
+    fn copies(&self) -> HashSet<u32> {        
+        (self.id+1..=self.id+self.win_count()).collect::<HashSet<u32>>()
+    }
+}
+
+fn num_copies(sum: &mut u32, copy_map: &BTreeMap<u32, HashSet<u32>>, id: u32) {
+    // copy_map = {
+    //     1: {2, 3, 4, 5},
+    //     2: {3, 4}
+    //     3: {4, 5}
+    //     4: {5}
+    //     5: {}
+    //     6: {}
+    // }
+    let copies = copy_map.get(&id).unwrap(); 
+    if !copies.is_empty() {
+        copies.iter().for_each(|c| {
+            *sum +=1; 
+            num_copies(sum, copy_map, *c);
+        });
     }
 }
 
 pub fn day04(input_lines: &[Vec<String>]) -> (String, String) {
+
     let scratch_cards = input_lines[0].iter().map(|s| s.parse::<ScratchCard>().unwrap()).collect::<Vec<ScratchCard>>();
 
     let answer1 = scratch_cards.iter().filter_map(|sc| sc.score()).sum::<u32>();
-    let answer2 = 0;
+
+    let copy_map = scratch_cards.iter().fold(
+        BTreeMap::new(), |mut map, sc| { map.insert(sc.id, sc.copies()); map }
+    );
+
+    let mut answer2 = 0;
+    for id in 1..=copy_map.len() {
+        answer2 += 1;
+        num_copies(&mut answer2, &copy_map, id as u32)
+    }
+
     (format!("{}", answer1), format!("{}", answer2))
 }
 
@@ -81,7 +107,7 @@ Card 4: 41 92 73 84 69 | 59 84 76 51 58  5 54 83
 Card 5: 87 83 26 28 32 | 88 30 70 12 93 22 82 36
 Card 6: 31 18 13 56 72 | 74 77 10 23 35 67 36 11", // INPUT STRING
 "13", // PART 1 RESULT
-"0" // PART 2 RESULT
+"30" // PART 2 RESULT
         )
     }
 
