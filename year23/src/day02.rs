@@ -37,13 +37,12 @@ impl FromStr for CubeGame {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         // Parse a string like "Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green"
-        let mut id_and_game = s.split(":");
+        let mut id_and_game = s.split(':');
         let id = id_and_game
             .next()
             .unwrap()
-            .split(" ")
-            .skip(1)
-            .next()
+            .split(' ')
+            .nth(1)
             .unwrap()
             .parse::<u32>()
             .unwrap();
@@ -51,7 +50,7 @@ impl FromStr for CubeGame {
         let rounds = id_and_game
             .next()
             .unwrap()
-            .split(";")
+            .split(';')
             .collect::<Vec<&str>>();
 
         // Find the max count of each colour across all rounds
@@ -63,7 +62,7 @@ impl FromStr for CubeGame {
         for round in rounds {
             let mut cube_sample: HashMap<CubeColour, u32> = HashMap::new();
             for cube in round.trim().split(", ") {
-                let mut count_and_colour = cube.split(" ");
+                let mut count_and_colour = cube.split(' ');
                 let count = count_and_colour
                     .next()
                     .unwrap()

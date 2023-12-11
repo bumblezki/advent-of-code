@@ -1,12 +1,11 @@
 use std::collections::HashMap;
 
 fn calibration_value(
-    line: &String,
+    line: &str,
     digit_maps: Option<(&HashMap<&str, &str>, &HashMap<&str, &str>)>,
 ) -> u32 {
-    let mut mut_line = line.clone();
-    if digit_maps.is_some() {
-        let (special_case_digit_map, digit_map) = digit_maps.unwrap();
+    let mut mut_line = line.to_owned();
+    if let Some((special_case_digit_map, digit_map)) = digit_maps {
         for (key, value) in special_case_digit_map {
             mut_line = mut_line.replace(key, value);
         }

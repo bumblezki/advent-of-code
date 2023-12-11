@@ -20,12 +20,12 @@ impl FromStr for ScratchCard {
         let mut numbers = Vec::new();
 
         let mut parts = s.split(": ");
-        let mut card_id = parts.next().unwrap().split(" ").filter(|s| s != &"");
+        let mut card_id = parts.next().unwrap().split(' ').filter(|s| s != &"");
         let id = card_id.nth(1).unwrap().parse::<u32>().unwrap();
 
         let mut card_numbers = parts.next().unwrap().split(" | ");
-        let card_winners = card_numbers.next().unwrap().split(" ").filter(|s| s != &"");
-        let card_numbers = card_numbers.next().unwrap().split(" ").filter(|s| s != &"");
+        let card_winners = card_numbers.next().unwrap().split(' ').filter(|s| s != &"");
+        let card_numbers = card_numbers.next().unwrap().split(' ').filter(|s| s != &"");
 
         for winner in card_winners {
             winners.insert(winner.parse::<u32>().unwrap());
@@ -53,7 +53,7 @@ impl ScratchCard {
     fn score(&self) -> Option<u32> {
         match self.win_count() {
             0 => None,
-            wc => Some(u32::pow(2, wc as u32 - 1)),
+            wc => Some(u32::pow(2, wc - 1)),
         }
     }
 
