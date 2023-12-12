@@ -14,9 +14,9 @@ pub fn day03(input_lines: &[Vec<String>]) -> (String, String) {
 
     let height = input_lines[0].len();
 
-    let mut gear_map = HashMap::new();
+    let mut gear_map: HashMap<(usize, usize), Vec<u32>> = HashMap::new();
 
-    let mut total: u32 = 0;
+    let mut answer1: u32 = 0;
 
     for (ii, row) in input_lines[0].iter().enumerate() {
 
@@ -36,7 +36,7 @@ pub fn day03(input_lines: &[Vec<String>]) -> (String, String) {
                 let mut touches = false;
                 for yy in clamp(ii.saturating_sub(1), 0, height - 1)..=clamp(ii+1, 0, height - 1) {
                     for xx in clamp(start_col.saturating_sub(1), 0, row.len() - 1)..clamp(jj+1, 0, row.len() - 1) {
-                        gear_map.insert((xx, yy), num);
+                        gear_map.entry((xx, yy)).or_default().push(num);
                         let this_char = input_lines[0][yy].chars().nth(xx).unwrap();
                         if this_char != '.' && !this_char.is_ascii_digit() {
                             touches = true;
@@ -44,14 +44,25 @@ pub fn day03(input_lines: &[Vec<String>]) -> (String, String) {
                     }
                 }
                 if touches {
-                    total += num;
+                    answer1 += num;
                 }
             } 
         }
     }
-
-    let answer1 = total;
-    let answer2 = 0;
+    
+    let mut answer2 = 0;
+    for (ii, row) in input_lines[0].iter().enumerate() {
+        for (jj, cc) in row.char_indices() {
+            if cc == '*' {
+                if let Some(nums) = gear_map.get(&(jj, ii)) {
+                    if nums.len() == 2 {
+                        answer2 += nums[0] * nums[1];
+                    }
+                }
+            }
+        }
+    }
+    
     (format!("{}", answer1), format!("{}", answer2))
 }
 
@@ -74,7 +85,7 @@ mod tests {
 ...$.*....
 .664.598..", // INPUT STRING
 "4361", // PART 1 RESULT
-"0" // PART 2 RESULT
+"467835" // PART 2 RESULT
         )
     }
 
