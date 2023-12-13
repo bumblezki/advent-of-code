@@ -115,9 +115,7 @@ pub fn day05(input_lines: &[Vec<String>]) -> (String, String) {
             let light = follow_mapping(&water, &water_to_light);
             let temperature = follow_mapping(&light, &light_to_temperature);
             let humidity = follow_mapping(&temperature, &temperature_to_humidity);
-            let location = follow_mapping(&humidity, &humidity_to_location);
-            // println!();
-            location
+            follow_mapping(&humidity, &humidity_to_location)
         })
         .min()
         .unwrap();
