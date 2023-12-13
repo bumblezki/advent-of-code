@@ -14,9 +14,6 @@ impl Race {
     }
 
     fn distance(&self, button_time: u64) -> Option<u64> {
-        if self.time < button_time {
-            return None;
-        }
         // Length of button press, B, is the speed because you gain
         // 1 mm/ms for each ms you hold the button.
         // s = B
@@ -24,25 +21,21 @@ impl Race {
         // is the (time) length of the race.
         // t = T - B
         // d = st = B(T - B)
-        Some(button_time * (self.time - button_time))
+        (self.time > button_time).then(|| button_time * (self.time - button_time))
     }
 
     fn winning_distance_count(&self) -> u64 {
-        let mut win_count = 0;
-        let mut time = 0;
-        while let Some(distance) = self.distance(time) {
-            // println!("{}: {} | {}: {}", self.time, self.distance, time, distance);
-            if distance > self.distance {
-                win_count += 1;
-            }
-            time += 1;
-        }
-        win_count
+        (0..self.time)
+            .filter_map(|button_time| {
+                (self.distance(button_time).unwrap() > self.distance).then(|| 1)
+            })
+            .sum()
     }
 }
 
 pub fn day06(input_lines: &[Vec<String>]) -> (String, String) {
     let answer1 = input_lines[0][0]
+        // Parse the input into an iterator of u64 tuples.
         .split_whitespace()
         .skip(1)
         .map(|s| s.parse::<u64>().unwrap())
@@ -52,6 +45,7 @@ pub fn day06(input_lines: &[Vec<String>]) -> (String, String) {
                 .skip(1)
                 .map(|s| s.parse::<u64>().unwrap()),
         )
+        // Now do the logic.
         .map(|(time, distance)| Race::new(time, distance).winning_distance_count())
         .product::<u64>();
 
