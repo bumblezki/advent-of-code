@@ -8,8 +8,6 @@ struct Race {
     distance: u64,
 }
 
-
-
 impl Race {
     fn new(time: u64, distance: u64) -> Self {
         Self { time, distance }
@@ -44,7 +42,7 @@ impl Race {
 }
 
 pub fn day06(input_lines: &[Vec<String>]) -> (String, String) {
-    let races: Vec<Race> = input_lines[0][0]
+    let answer1 = input_lines[0][0]
         .split_whitespace()
         .skip(1)
         .map(|s| s.parse::<u64>().unwrap())
@@ -54,15 +52,14 @@ pub fn day06(input_lines: &[Vec<String>]) -> (String, String) {
                 .skip(1)
                 .map(|s| s.parse::<u64>().unwrap()),
         )
-        .map(|(time, distance)| Race::new(time, distance))
-        .collect();
+        .map(|(time, distance)| Race::new(time, distance).winning_distance_count())
+        .product::<u64>();
 
-    let answer1 = races.iter().map(|r| r.winning_distance_count()).product::<u64>();
-
-    let long_race = Race::new(
+    let answer2 = Race::new(
         input_lines[0][0]
             .split_once(':')
-            .unwrap().1
+            .unwrap()
+            .1
             .chars()
             .filter(|c| c.is_ascii_digit())
             .collect::<String>()
@@ -70,14 +67,15 @@ pub fn day06(input_lines: &[Vec<String>]) -> (String, String) {
             .unwrap(),
         input_lines[0][1]
             .split_once(':')
-            .unwrap().1
+            .unwrap()
+            .1
             .chars()
             .filter(|c| c.is_ascii_digit())
             .collect::<String>()
             .parse::<u64>()
             .unwrap(),
-    );
-    let answer2 = long_race.winning_distance_count();
+    )
+    .winning_distance_count();
     (format!("{}", answer1), format!("{}", answer2))
 }
 
@@ -89,9 +87,9 @@ mod tests {
     #[test]
     fn check_day06_case01() {
         full_test(
-"Time:      7  15   30
-Distance:  9  40  200",  // INPUT STRING
-            "288", // PART 1 RESULT
+            "Time:      7  15   30
+Distance:  9  40  200", // INPUT STRING
+            "288",   // PART 1 RESULT
             "71503", // PART 2 RESULT
         )
     }
