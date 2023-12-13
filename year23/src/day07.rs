@@ -116,40 +116,40 @@ impl Hand {
         }
 
         let card_counts = cards.iter().collect::<Counter<&Card>>();
-        let joker_count = *card_counts.get(&Card::Joker).unwrap_or(&0);
 
-        let hand_type = match (&card_counts, card_counts.len()) {
-            (_, 1) => HandType::FiveOfAKind,
-            (ccs, 2) => match joker_count {
-                0 => {
-                    if ccs.values().any(|&count| count == 4) {
-                        HandType::FourOfAKind
-                    } else {
-                        HandType::FullHouse
-                    }
-                }
-                _ => HandType::FiveOfAKind,
-            },
-            (ccs, 3) => {
-                if ccs.values().any(|&count| count == 3) {
-                    match joker_count {
-                        3 => HandType::FourOfAKind,
-                        1 => HandType::FourOfAKind,
-                        _ => HandType::ThreeOfAKind,
-                    }
+        let hand_type = match (
+            &card_counts,
+            card_counts.len(),
+            *card_counts.get(&Card::Joker).unwrap_or(&0),
+        ) {
+            (_, 1, _) => HandType::FiveOfAKind,
+            (ccs, 2, 0) => {
+                if ccs.values().any(|&count| count == 4) {
+                    HandType::FourOfAKind
                 } else {
-                    match joker_count {
-                        2 => HandType::FourOfAKind,
-                        1 => HandType::ThreeOfAKind,
-                        _ => HandType::TwoPair,
-                    }
+                    HandType::FullHouse
                 }
             }
-            (_, 4) => match joker_count {
-                1 | 2 => HandType::ThreeOfAKind,
-                _ => HandType::OnePair,
-            },
-            (_, 5) => HandType::HighCard,
+            (_, 2, 1..=4) => HandType::FiveOfAKind,
+            (ccs, 3, 0) => {
+                if ccs.values().any(|&count| count == 3) {
+                    HandType::ThreeOfAKind
+                } else {
+                    HandType::TwoPair
+                }
+            }
+            (ccs, 3, 1) => {
+                if ccs.values().any(|&count| count == 3) {
+                    HandType::FourOfAKind
+                } else {
+                    HandType::FullHouse
+                }
+            }
+            (_, 3, 2 | 3) => HandType::FourOfAKind,
+            (_, 4, 0) => HandType::OnePair,
+            (_, 4, 1 | 2) => HandType::ThreeOfAKind,
+            (_, 5, 1) => HandType::OnePair,
+            (_, 5, 0) => HandType::HighCard,
             _ => panic!("Invalid number of cards: {}", cards.len()),
         };
 
