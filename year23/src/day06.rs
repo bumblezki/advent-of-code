@@ -21,13 +21,13 @@ impl Race {
         // is the (time) length of the race.
         // t = T - B
         // d = st = B(T - B)
-        (self.time > button_time).then(|| button_time * (self.time - button_time))
+        (self.time > button_time).then_some(button_time * (self.time - button_time))
     }
 
     fn winning_distance_count(&self) -> u64 {
         (0..self.time)
             .filter_map(|button_time| {
-                (self.distance(button_time).unwrap() > self.distance).then(|| 1)
+                (self.distance(button_time).unwrap() > self.distance).then_some(1)
             })
             .sum()
     }
