@@ -106,23 +106,10 @@ pub fn day05(input_lines: &[Vec<String>]) -> (String, String) {
         .map(|s| s.parse::<Mapping>().expect("Failed to parse Mapping"))
         .collect::<Vec<Mapping>>();
 
-    
-
-    let answer1 = seeds.iter().map(|seed| {
-        let soil = follow_mapping(seed, &seeds_to_soil);
-        let fertilizer = follow_mapping(&soil, &soil_to_fertilizer);
-        let water = follow_mapping(&fertilizer, &fertilizer_to_water);
-        let light = follow_mapping(&water, &water_to_light);
-        let temperature = follow_mapping(&light, &light_to_temperature);
-        let humidity = follow_mapping(&temperature, &temperature_to_humidity);
-        let location = follow_mapping(&humidity, &humidity_to_location);
-        // println!();
-        location
-    }).min().unwrap();
-    let answer2 = seeds.chunks(2).map(|chunk| {
-        let mut lowest_location = u64::MAX;
-        for seed in chunk[0]..chunk[0]+chunk[1] {
-            let soil = follow_mapping(&seed, &seeds_to_soil);
+    let answer1 = seeds
+        .iter()
+        .map(|seed| {
+            let soil = follow_mapping(seed, &seeds_to_soil);
             let fertilizer = follow_mapping(&soil, &soil_to_fertilizer);
             let water = follow_mapping(&fertilizer, &fertilizer_to_water);
             let light = follow_mapping(&water, &water_to_light);
@@ -130,12 +117,31 @@ pub fn day05(input_lines: &[Vec<String>]) -> (String, String) {
             let humidity = follow_mapping(&temperature, &temperature_to_humidity);
             let location = follow_mapping(&humidity, &humidity_to_location);
             // println!();
-            if location < lowest_location {
-                lowest_location = location;
+            location
+        })
+        .min()
+        .unwrap();
+    let answer2 = seeds
+        .chunks(2)
+        .map(|chunk| {
+            let mut lowest_location = u64::MAX;
+            for seed in chunk[0]..chunk[0] + chunk[1] {
+                let soil = follow_mapping(&seed, &seeds_to_soil);
+                let fertilizer = follow_mapping(&soil, &soil_to_fertilizer);
+                let water = follow_mapping(&fertilizer, &fertilizer_to_water);
+                let light = follow_mapping(&water, &water_to_light);
+                let temperature = follow_mapping(&light, &light_to_temperature);
+                let humidity = follow_mapping(&temperature, &temperature_to_humidity);
+                let location = follow_mapping(&humidity, &humidity_to_location);
+                // println!();
+                if location < lowest_location {
+                    lowest_location = location;
+                }
             }
-        }
-        lowest_location
-    }).min().unwrap();
+            lowest_location
+        })
+        .min()
+        .unwrap();
     (format!("{}", answer1), format!("{}", answer2))
 }
 
@@ -147,7 +153,7 @@ mod tests {
     #[test]
     fn check_day05_case01() {
         full_test(
-"seeds: 79 14 55 13
+            "seeds: 79 14 55 13
 
 seed-to-soil map:
 50 98 2
@@ -179,7 +185,7 @@ temperature-to-humidity map:
 
 humidity-to-location map:
 60 56 37
-56 93 4",  // INPUT STRING
+56 93 4", // INPUT STRING
             "35", // PART 1 RESULT
             "46", // PART 2 RESULT
         )

@@ -1,7 +1,21 @@
 // Potential improvements:
 //
 
-pub fn day06(_input_lines: &[Vec<String>]) -> (String, String) {
+pub fn day06(input_lines: &[Vec<String>]) -> (String, String) {
+    let output: Vec<(u64, u64)> = input_lines[0][0]
+        .split_whitespace()
+        .skip(1)
+        .map(|s| s.parse::<u64>().unwrap())
+        .zip(
+            input_lines[0][1]
+                .split_whitespace()
+                .skip(1)
+                .map(|s| s.parse::<u64>().unwrap()),
+        )
+        .map(|(time, distance)| (time, distance))
+        .collect();
+    
+    println!("{:?}", output);
     let answer1 = 0;
     let answer2 = 0;
     (format!("{}", answer1), format!("{}", answer2))
